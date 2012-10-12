@@ -2553,6 +2553,7 @@ test_return_t user_supplied_bug16(memcached_st *memc)
 /* Check the validity of chinese key*/
 test_return_t user_supplied_bug17(memcached_st *memc)
 {
+  test_compare(memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_VERIFY_KEY, false), MEMCACHED_SUCCESS);
   const char *key= "豆瓣";
   const char *value="我们在炎热抑郁的夏天无法停止豆瓣";
   memcached_return_t rc= memcached_set(memc, key, strlen(key),
@@ -3962,6 +3963,7 @@ test_return_t regression_bug_442914(memcached_st *original_memc)
   test_skip(original_memc->servers[0].type, MEMCACHED_CONNECTION_TCP);
 
   memcached_st* memc= create_single_instance_memcached(original_memc, "--NOREPLY --TCP-NODELAY");
+  test_compare(memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_VERIFY_KEY, false), MEMCACHED_SUCCESS);
 
   for (uint32_t x= 0; x < 250; ++x)
   {
@@ -4231,6 +4233,7 @@ test_return_t test_multiple_get_last_disconnect(memcached_st *)
 
   memcached_st *memc= memcached(server_string, strlen(server_string));
   test_true(memc);
+  test_compare(memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_VERIFY_KEY, false), MEMCACHED_SUCCESS);
 
   // We will just use the error strings as our keys
   uint32_t counter= 100;
