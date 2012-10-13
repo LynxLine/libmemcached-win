@@ -2,7 +2,7 @@
  * 
  *  Libmemcached Utility library
  *
- *  Copyright (C) 2011 Data Differential, http://datadifferential.com/
+ *  Copyright (C) 2011-2012 Data Differential, http://datadifferential.com/
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are
@@ -40,6 +40,7 @@
 
 #include <config.h>
 
-#include <libmemcachedutil-1.0/util.h>
+#include <libmemcachedutil-1.2/util.h>
+
 #include <libmemcached/assert.hpp>
 #include <libmemcached/backtrace.hpp>

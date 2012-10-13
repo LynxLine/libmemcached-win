@@ -34,7 +34,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <libmemcached-1.0/memcached.h>
+#include <libmemcached-1.2/memcached.h>
 
 #include "libmemcached/socket.hpp"
 #include "libmemcached/memcached/protocol_binary.h"

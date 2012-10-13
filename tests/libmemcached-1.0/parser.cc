@@ -44,8 +44,8 @@ using namespace libtest;
 #include <string>
 #include <cerrno>
 
-#include <libmemcached-1.0/memcached.h>
-#include <libmemcachedutil-1.0/util.h>
+#include <libmemcached-1.2/memcached.h>
+#include <libmemcachedutil-1.2/util.h>
 
 #include <tests/libmemcached-1.0/parser.h>
 #include <tests/print.h>

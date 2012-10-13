@@ -37,7 +37,7 @@
 #include <config.h>
 #include <libtest/test.hpp>
 
-#include <libmemcached-1.0/memcached.h>
+#include <libmemcached-1.2/memcached.h>
 
 #include "libmemcached/server_instance.h"
 #include "libmemcached/continuum.hpp"

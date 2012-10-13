@@ -41,7 +41,7 @@
 #include <cstring>
 #include <iostream>
 
-#include <libmemcached-1.0/memcached.h>
+#include <libmemcached-1.2/memcached.h>
 
 int main(int argc, char *argv[])
 {

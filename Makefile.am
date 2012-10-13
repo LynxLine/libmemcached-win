@@ -37,18 +37,15 @@ dist_aclocal_DATA=
 include libtest/include.am
 
 include libhashkit-1.0/include.am
-include libmemcached-1.0/include.am
-include libmemcachedprotocol-0.0/include.am
-include libmemcachedutil-1.0/include.am
+include libmemcached-1.2/include.am
+include libmemcachedutil-1.2/include.am
 
 include clients/include.am
 include docs/include.am
 include man/include.am
-include example/include.am
 include libhashkit/include.am
 include libmemcached/include.am
 include libmemcachedutil/include.am
-include libmemcachedprotocol/include.am
 include libmemcachedinternal/include.am
 include libmemcachedinternal/util/include.am
 include poll/include.am

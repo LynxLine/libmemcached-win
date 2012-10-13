@@ -40,7 +40,7 @@
 
 #include <config.h>
 
-#include <libmemcached-1.0/memcached.h>
+#include <libmemcached-1.2/memcached.h>
 
 #include "libmemcached/string.hpp"
 #include "libmemcached/is.h"

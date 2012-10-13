@@ -45,11 +45,11 @@
 
 using namespace libtest;
 
-#include <libmemcached-1.0/memcached.h>
+#include <libmemcached-1.2/memcached.h>
 #include <libmemcached/server_instance.h>
 #include <libmemcached/io.h>
 #include <libmemcached/udp.hpp>
-#include <libmemcachedutil-1.0/util.h>
+#include <libmemcachedutil-1.2/util.h>
 
 #include <cstdio>
 #include <cstdlib>

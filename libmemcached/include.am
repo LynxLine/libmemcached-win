@@ -9,10 +9,6 @@ include libmemcached/csl/include.am
 EXTRA_DIST+= libmemcached/libmemcached_probes.d
 EXTRA_DIST+= libmemcached/memcached/README.txt
 
-nobase_include_HEADERS+= libmemcached/memcached.h
-nobase_include_HEADERS+= libmemcached/memcached.hpp
-nobase_include_HEADERS+= libmemcached/util.h
-
 noinst_HEADERS+= libmemcached/array.h 
 noinst_HEADERS+= libmemcached/assert.hpp 
 noinst_HEADERS+= libmemcached/backtrace.hpp 

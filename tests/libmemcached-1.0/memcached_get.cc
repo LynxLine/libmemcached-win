@@ -41,7 +41,7 @@
   Test cases
 */
 
-#include <libmemcached-1.0/memcached.h>
+#include <libmemcached-1.2/memcached.h>
 #include "tests/libmemcached-1.0/memcached_get.h"
 #include "tests/libmemcached-1.0/setup_and_teardowns.h"
 

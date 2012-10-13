@@ -272,7 +272,7 @@ AX_AM_JOBSERVER([yes])
 AC_CONFIG_FILES([
   Makefile
   docs/conf.py
-  libmemcached-1.0/configure.h
+  libmemcached-1.2/configure.h
   support/libmemcached.pc
   support/libmemcached.spec
   ])

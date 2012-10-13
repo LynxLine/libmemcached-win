@@ -38,8 +38,8 @@
 #include <config.h>
 #include <libtest/test.hpp>
 
-#include <libmemcached-1.0/memcached.h>
-#include <libmemcachedutil-1.0/util.h>
+#include <libmemcached-1.2/memcached.h>
+#include <libmemcachedutil-1.2/util.h>
 
 #include "tests/libmemcached-1.0/encoding_key.h"
 

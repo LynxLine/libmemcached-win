@@ -89,7 +89,7 @@
 #  include <dlfcn.h>
 #endif
 
-#include <libmemcached-1.0/memcached.h>
+#include <libmemcached-1.2/memcached.h>
 #include <libmemcached/watchpoint.h>
 #include <libmemcached/is.h>
 

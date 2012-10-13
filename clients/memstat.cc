@@ -26,7 +26,7 @@
 #include <sys/types.h>
 #include <sys/types.h>
 
-#include <libmemcached-1.0/memcached.h>
+#include <libmemcached-1.2/memcached.h>
 
 #include "client_options.h"
 #include "utilities.h"
