@@ -77,12 +77,7 @@ docs/text
 example/memcached_light
 example/t/memcached_light
 libhashkit-1.0/configure.h
-libmemcached-1.0/configure.h
-libmemcached-1.0/t/c_sasl_test
-libmemcached-1.0/t/c_test
-libmemcached-1.0/t/cc_test
 libmemcached-1.2/configure.h
-libmemcached-2.0/configure.h
 libmemcached-?.??/
 libmemcached/configure.h
 libmemcached/dtrace_probes.h
@@ -156,3 +151,6 @@ tests/var/
 tmp_chroot
 unittests/unittests
 aminclude.am
+libmemcached-1.2/t/c_sasl_test
+libmemcached-1.2/t/c_test
+libmemcached-1.2/t/cc_test
