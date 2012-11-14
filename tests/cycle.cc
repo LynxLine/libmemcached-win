@@ -39,7 +39,7 @@
   Test that we are cycling the servers we are creating during testing.
 */
 
-#include <config.h>
+#include <mem_config.h>
 #include <libtest/test.hpp>
 
 using namespace libtest;
@@ -57,6 +57,8 @@ static test_return_t server_startup_single_TEST(void *obj)
 
 static test_return_t server_startup_multiple_TEST(void *obj)
 {
+  test_skip(true, jenkins_is_caller());
+
   server_startup_st *servers= (server_startup_st*)obj;
   for (size_t x= 0; x < 10; x++)
   {
@@ -118,6 +120,12 @@ collection_st collection[] ={
 
 static void *world_create(server_startup_st& servers, test_return_t& error)
 {
+  if (jenkins_is_caller())
+  {
+    error= TEST_SKIPPED;
+    return NULL;
+  }
+
   if (libtest::has_memcached() == false)
   {
     error= TEST_SKIPPED;

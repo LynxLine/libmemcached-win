@@ -4,10 +4,7 @@
 #
 # SYNOPSIS
 #
-#   AX_HARDEN_COMPILER_FLAGS()
-#   AX_HARDEN_LINKER_FLAGS()
-#   AX_HARDEN_CC_COMPILER_FLAGS()
-#   AX_HARDEN_CXX_COMPILER_FLAGS()
+#   AX_HARDEN_COMPILER_FLAGS() AX_HARDEN_LINKER_FLAGS()
 #
 # DESCRIPTION
 #
@@ -19,23 +16,23 @@
 #
 #  Copyright (C) 2012 Brian Aker
 #  All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above copyright
 #  notice, this list of conditions and the following disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #  copyright notice, this list of conditions and the following disclaimer
 #  in the documentation and/or other materials provided with the
 #  distribution.
-#  
+#
 #      * The names of its contributors may not be used to endorse or
 #  promote products derived from this software without specific prior
 #  written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 #  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 #  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -50,167 +47,210 @@
 
 # The Following flags are not checked for
 # -Wdeclaration-after-statement is counter to C99
-# AX_APPEND_COMPILE_FLAGS([-std=c++11]) -- Not ready yet
-# AX_APPEND_COMPILE_FLAGS([-pedantic]) -- ?
-# AX_APPEND_COMPILE_FLAGS([-Wstack-protector]) -- Issues on 32bit compile
-# AX_APPEND_COMPILE_FLAGS([-fstack-protector-all]) -- Issues on 32bit compile
-# AX_APPEND_COMPILE_FLAGS([-Wlong-long]) -- Don't turn on for compatibility issues memcached_stat_st
+# _APPEND_COMPILE_FLAGS_ERROR([-std=c++11]) -- Not ready yet
+# _APPEND_COMPILE_FLAGS_ERROR([-pedantic]) --
+# ?  _APPEND_COMPILE_FLAGS_ERROR([-Wlong-long]) -- Don't turn on for
+# compatibility issues memcached_stat_st
 
-#serial 3
+#serial 6
 
-  AC_DEFUN([AX_HARDEN_LINKER_FLAGS], [
-      AC_REQUIRE([AX_CHECK_LINK_FLAG])
-      AC_REQUIRE([AX_VCS_CHECKOUT])
-      AC_REQUIRE([AX_DEBUG])
-      AC_REQUIRE([AX_CXX_COMPILER_VERSION])
+AC_DEFUN([_APPEND_LINK_FLAGS_ERROR],
+         [AC_REQUIRE([AX_APPEND_LINK_FLAGS])
+         AX_APPEND_LINK_FLAGS([$1],[LIB],[-Werror])
+         ])
 
-      ax_append_compile_flags_extra=
-      AS_IF([test "$CLANG" = "yes"],[ax_append_compile_flags_extra="-Werror"])
+AC_DEFUN([_APPEND_COMPILE_FLAGS_ERROR],
+         [AC_REQUIRE([AX_APPEND_COMPILE_FLAGS])
+         AX_APPEND_COMPILE_FLAGS([$1],,[-Werror])
+         ])
 
-      AS_IF([test "$ac_cv_vcs_checkout" = yes], [
-          AX_CHECK_LINK_FLAG([-Werror])
-          ax_append_compile_flags_extra=
-          ])
-      AX_CHECK_LINK_FLAG([-z relro -z now],,[$ax_append_compile_flags_extra])
-      AX_CHECK_LINK_FLAG([-pie],,[$ax_append_compile_flags_extra])
-      ])
+AC_DEFUN([_HARDEN_LINKER_FLAGS],
+         [_APPEND_LINK_FLAGS_ERROR([-z relro -z now])
+         _APPEND_LINK_FLAGS_ERROR([-pie])
+         AS_IF([test "x$ac_cv_warnings_as_errors" = xyes],
+               [_APPEND_LINK_FLAGS_ERROR([-Werror])])
+         ])
 
-  AC_DEFUN([AX_HARDEN_CC_COMPILER_FLAGS], [
-      AC_REQUIRE([AX_APPEND_COMPILE_FLAGS])
-      AC_REQUIRE([AX_HARDEN_LINKER_FLAGS])
+AC_DEFUN([_HARDEN_CC_COMPILER_FLAGS],
+         [AC_LANG_PUSH([C])dnl
 
-      AC_LANG_PUSH([C])
-      CFLAGS=
+         _APPEND_COMPILE_FLAGS_ERROR([-g])
+         AS_IF([test "x$ax_enable_debug" = xyes],
+               [_APPEND_COMPILE_FLAGS_ERROR([-ggdb])
+               _APPEND_COMPILE_FLAGS_ERROR([-O0])],
+               [_APPEND_COMPILE_FLAGS_ERROR([-O2])])
 
-      AX_APPEND_COMPILE_FLAGS([-g])
-      AS_IF([test "$ax_enable_debug" = yes], [
-        AX_APPEND_COMPILE_FLAGS([-ggdb],,[$ax_append_compile_flags_extra])
-        AX_APPEND_COMPILE_FLAGS([-O0],,[$ax_append_compile_flags_extra])
-        ],[
-        AX_APPEND_COMPILE_FLAGS([-O2],,[$ax_append_compile_flags_extra])
-        ])
+         _APPEND_COMPILE_FLAGS_ERROR([-Wno-pragmas])
+         _APPEND_COMPILE_FLAGS_ERROR([-Wall])
+         _APPEND_COMPILE_FLAGS_ERROR([-Wextra])
+         _APPEND_COMPILE_FLAGS_ERROR([-Wunknown-pragmas])
+         _APPEND_COMPILE_FLAGS_ERROR([-Wthis-test-should-fail])
+         _APPEND_COMPILE_FLAGS_ERROR([-std=c99])
+# Anything below this comment please keep sorted.
+         _APPEND_COMPILE_FLAGS_ERROR([--param=ssp-buffer-size=1])
+# _APPEND_COMPILE_FLAGS_ERROR([-Wmissing-format-attribute])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wno-attributes])
+          _APPEND_COMPILE_FLAGS_ERROR([-Waddress])
+          _APPEND_COMPILE_FLAGS_ERROR([-Warray-bounds])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wbad-function-cast])
+# Not in use -Wc++-compat
+          _APPEND_COMPILE_FLAGS_ERROR([-Wchar-subscripts])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wcomment])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wfloat-equal])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wformat-security])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wformat=2])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wlogical-op])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wmaybe-uninitialized])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wmissing-field-initializers])
+          AS_IF([test "x$MINGW" = xyes],
+                [_APPEND_COMPILE_FLAGS_ERROR([-Wno-missing-noreturn])],
+                [_APPEND_COMPILE_FLAGS_ERROR([-Wmissing-noreturn])])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wmissing-prototypes])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wnested-externs])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wnormalized=id])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wold-style-definition])
+          _APPEND_COMPILE_FLAGS_ERROR([-Woverride-init])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wpointer-arith])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wpointer-sign])
+          AS_IF([test "x$MINGW" = xyes],
+                [_APPEND_COMPILE_FLAGS_ERROR([-Wno-suggest-attribute=const])
+                _APPEND_COMPILE_FLAGS_ERROR([-Wno-suggest-attribute=noreturn])
+                _APPEND_COMPILE_FLAGS_ERROR([-Wno-suggest-attribute=pure])
+                _APPEND_COMPILE_FLAGS_ERROR([-Wno-redundant-decls])],
+                [_APPEND_COMPILE_FLAGS_ERROR([-Wredundant-decls])])
 
-      ac_cv_warnings_as_errors=no
-      AS_IF([test "$ac_cv_vcs_checkout" = yes], [
-        AX_APPEND_COMPILE_FLAGS([-Werror],,[$ax_append_compile_flags_extra])
-        AX_APPEND_COMPILE_FLAGS([-fstack-check],,[$ax_append_compile_flags_extra])
-        ac_cv_warnings_as_errors=yes
-        ],[
-        AX_APPEND_COMPILE_FLAGS([-Wno-pragmas],,[$ax_append_compile_flags_extra])
-        ])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wshadow])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wshorten-64-to-32])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wsign-compare])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wstrict-overflow=1])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wstrict-prototypes])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wswitch-enum])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wundef])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wunused])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wunused-result])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wunused-variable])
+          _APPEND_COMPILE_FLAGS_ERROR([-Wwrite-strings])
+          _APPEND_COMPILE_FLAGS_ERROR([-floop-parallelize-all])
+          _APPEND_COMPILE_FLAGS_ERROR([-fwrapv])
+          _APPEND_COMPILE_FLAGS_ERROR([-fmudflapt])
 
-      AX_APPEND_COMPILE_FLAGS([-Wall],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wextra],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wunknown-pragmas],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wthis-test-should-fail],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-std=c99],,[$ax_append_compile_flags_extra])
-      dnl Anything below this comment please keep sorted.
-      AX_APPEND_COMPILE_FLAGS([--param=ssp-buffer-size=1],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Waddress],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Warray-bounds],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wbad-function-cast],,[$ax_append_compile_flags_extra])
-      dnl Not in use -Wc++-compat
-      AX_APPEND_COMPILE_FLAGS([-Wchar-subscripts],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wcomment],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wfloat-equal],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wformat-security],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wformat=2],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wlogical-op],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wmaybe-uninitialized],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wmissing-field-initializers],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wmissing-noreturn],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wmissing-prototypes],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wnested-externs],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wnormalized=id],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wold-style-definition],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Woverride-init],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wpointer-arith],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wpointer-sign],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wredundant-decls],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wshadow],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wshorten-64-to-32],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wsign-compare],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wstrict-overflow=1],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wstrict-prototypes],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wswitch-enum],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wundef],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wunused-result],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wunused-variable],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wwrite-strings],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-floop-parallelize-all],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-fwrapv],,[$ax_append_compile_flags_extra])
-      AC_LANG_POP
+          AS_IF([test "x$ac_cv_vcs_checkout" = xyes],
+                [_APPEND_COMPILE_FLAGS_ERROR([-fstack-check])
+                AS_IF([test "x$ac_c_gcc_recent" = xyes],
+                      [_APPEND_COMPILE_FLAGS_ERROR([-D_FORTIFY_SOURCE=2])
+                      _APPEND_COMPILE_FLAGS_ERROR([-Wstack-protector])
+                      _APPEND_COMPILE_FLAGS_ERROR([-fstack-protector])
+                      _APPEND_COMPILE_FLAGS_ERROR([-fstack-protector-all])
+                      ])])
 
-      ])
+         AS_IF([test "x$ac_cv_vcs_checkout" = xyes],
+               [_APPEND_COMPILE_FLAGS_ERROR([-fstack-check])],
+               [_APPEND_COMPILE_FLAGS_ERROR([-Wno-pragmas])])
 
-  AC_DEFUN([AX_HARDEN_CXX_COMPILER_FLAGS], [
-      AC_REQUIRE([AX_HARDEN_CC_COMPILER_FLAGS])
-      AC_LANG_PUSH([C++])
-      CXXFLAGS=
-
-      AX_APPEND_COMPILE_FLAGS([-g],,[$ax_append_compile_flags_extra])
-      AS_IF([test "$ax_enable_debug" = yes], [
-        AX_APPEND_COMPILE_FLAGS([-O0],,[$ax_append_compile_flags_extra])
-        AX_APPEND_COMPILE_FLAGS([-ggdb],,[$ax_append_compile_flags_extra])
-        ],[
-        AX_APPEND_COMPILE_FLAGS([-O2],,[$ax_append_compile_flags_extra])
-        AX_APPEND_COMPILE_FLAGS([-D_FORTIFY_SOURCE=2],,[$ax_append_compile_flags_extra])
-        ])
-
-      AS_IF([test "$ac_cv_vcs_checkout" = yes], [
-        AX_APPEND_COMPILE_FLAGS([-Werror],,[$ax_append_compile_flags_extra])
-        AX_APPEND_COMPILE_FLAGS([-fstack-check],,[$ax_append_compile_flags_extra])
-        ],[
-        AX_APPEND_COMPILE_FLAGS([-Wno-pragmas],,[$ax_append_compile_flags_extra])
-        ])
-
-      AX_APPEND_COMPILE_FLAGS([-Wall],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wextra],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wunknown-pragmas],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wthis-test-should-fail],,[$ax_append_compile_flags_extra])
-      dnl Anything below this comment please keep sorted.
-      AX_APPEND_COMPILE_FLAGS([--param=ssp-buffer-size=1],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Waddress],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Warray-bounds],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wchar-subscripts],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wcomment],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wctor-dtor-privacy],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wfloat-equal],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wformat=2],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wmaybe-uninitialized],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wmissing-field-initializers],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wmissing-noreturn],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wlogical-op],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wnon-virtual-dtor],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wnormalized=id],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Woverloaded-virtual],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wpointer-arith],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wredundant-decls],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wshadow],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wshorten-64-to-32],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wsign-compare],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wstrict-overflow=1],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wswitch-enum],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wundef],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wc++11-compat],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wunused-result],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wunused-variable],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wwrite-strings],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-Wformat-security],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-floop-parallelize-all],,[$ax_append_compile_flags_extra])
-      AX_APPEND_COMPILE_FLAGS([-fwrapv],,[$ax_append_compile_flags_extra])
-      AC_LANG_POP
+          AC_LANG_POP([C])
   ])
 
-  AC_DEFUN([AX_HARDEN_COMPILER_FLAGS], [
-      AC_REQUIRE([AX_HARDEN_CXX_COMPILER_FLAGS],,[$ax_append_compile_flags_extra])
-      ])
+AC_DEFUN([_HARDEN_CXX_COMPILER_FLAGS],
+         [AC_LANG_PUSH([C++])
+         AC_REQUIRE([_APPEND_COMPILE_FLAGS_ERROR])
 
-  AC_DEFUN([AX_CC_OTHER_FLAGS], [
-      AC_REQUIRE([AX_APPEND_COMPILE_FLAGS])
-      AC_REQUIRE([AX_HARDEN_LINKER_FLAGS])
+            _APPEND_COMPILE_FLAGS_ERROR([-g])
+            AS_IF([test "x$ax_enable_debug" = xyes],
+                  [_APPEND_COMPILE_FLAGS_ERROR([-O0])
+                  _APPEND_COMPILE_FLAGS_ERROR([-ggdb])],
+                  [_APPEND_COMPILE_FLAGS_ERROR([-O2])])
 
-      AC_LANG_PUSH([C])
-      AX_APPEND_COMPILE_FLAGS([-pipe],,[$ax_append_compile_flags_extra])
-      AC_LANG_POP
-      ])
+            AS_IF([test "x$ac_cv_vcs_checkout" = xyes],
+                  [_APPEND_COMPILE_FLAGS_ERROR([-fstack-check])],
+                  [_APPEND_COMPILE_FLAGS_ERROR([-Wno-pragmas])])
+
+            _APPEND_COMPILE_FLAGS_ERROR([-Wall])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wextra])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wunknown-pragmas])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wthis-test-should-fail])
+# Anything below this comment please keep sorted.
+            _APPEND_COMPILE_FLAGS_ERROR([--param=ssp-buffer-size=1])
+# _APPEND_COMPILE_FLAGS_ERROR([-Wmissing-format-attribute])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wno-attributes])
+            _APPEND_COMPILE_FLAGS_ERROR([-Waddress])
+            _APPEND_COMPILE_FLAGS_ERROR([-Warray-bounds])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wchar-subscripts])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wcomment])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wctor-dtor-privacy])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wfloat-equal])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wformat=2])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wmaybe-uninitialized])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wmissing-field-initializers])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wlogical-op])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wnon-virtual-dtor])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wnormalized=id])
+            _APPEND_COMPILE_FLAGS_ERROR([-Woverloaded-virtual])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wpointer-arith])
+            AS_IF([test "x$MINGW" = xyes],
+                  [_APPEND_COMPILE_FLAGS_ERROR([-Wno-suggest-attribute=const])
+                  _APPEND_COMPILE_FLAGS_ERROR([-Wno-missing-noreturn])
+                  _APPEND_COMPILE_FLAGS_ERROR([-Wmissing-noreturn])
+                  _APPEND_COMPILE_FLAGS_ERROR([-Wno-suggest-attribute=noreturn])
+                  _APPEND_COMPILE_FLAGS_ERROR([-Wno-error=suggest-attribute=noreturn])
+                  _APPEND_COMPILE_FLAGS_ERROR([-Wno-redundant-decls])],
+                  [_APPEND_COMPILE_FLAGS_ERROR([-Wredundant-decls])])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wshadow])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wshorten-64-to-32])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wsign-compare])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wstrict-overflow=1])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wswitch-enum])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wundef])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wc++11-compat])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wunused])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wunused-result])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wunused-variable])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wwrite-strings])
+            _APPEND_COMPILE_FLAGS_ERROR([-Wformat-security])
+            _APPEND_COMPILE_FLAGS_ERROR([-floop-parallelize-all])
+            _APPEND_COMPILE_FLAGS_ERROR([-fwrapv])
+            _APPEND_COMPILE_FLAGS_ERROR([-fmudflapt])
+
+            AS_IF([test "x$ac_cv_vcs_checkout" = xyes],
+                  [_APPEND_COMPILE_FLAGS_ERROR([-fstack-check])
+                  AS_IF([test "x$ac_c_gcc_recent" = xyes],
+                        [_APPEND_COMPILE_FLAGS_ERROR([-D_FORTIFY_SOURCE=2])
+                        _APPEND_COMPILE_FLAGS_ERROR([-Wstack-protector])
+                        _APPEND_COMPILE_FLAGS_ERROR([-fstack-protector])
+                        _APPEND_COMPILE_FLAGS_ERROR([-fstack-protector-all])
+                        ])])
+
+            AS_IF([test "x$ac_cv_warnings_as_errors" = xyes],
+                  [_APPEND_COMPILE_FLAGS_ERROR([-Werror])])
+            AC_LANG_POP([C++])
+  ])
+
+  AC_DEFUN([_CC_OTHER_FLAGS],
+            [AC_REQUIRE([_APPEND_COMPILE_FLAGS_ERROR])
+
+            AC_LANG_PUSH([C])
+            _APPEND_COMPILE_FLAGS_ERROR([-pipe])
+            AC_LANG_POP([C])
+            ])
+
+# All of the heavy lifting happens in _HARDEN_LINKER_FLAGS,
+# _HARDEN_CC_COMPILER_FLAGS, _HARDEN_CXX_COMPILER_FLAGS, _CC_OTHER_FLAGS
+  AC_DEFUN([AX_HARDEN_COMPILER_FLAGS],
+           [AC_PREREQ([2.63])dnl
+           AC_REQUIRE([AX_APPEND_LINK_FLAGS])
+           AC_REQUIRE([AX_COMPILER_VERSION])
+           AC_REQUIRE([AX_DEBUG])
+           AC_REQUIRE([AX_VCS_CHECKOUT])
+
+           AC_REQUIRE([gl_VISIBILITY])
+           AS_IF([test -n "$CFLAG_VISIBILITY"],[CPPFLAGS="$CPPFLAGS $CFLAG_VISIBILITY"])
+
+           AC_CACHE_CHECK([if all warnings into errors],[ac_cv_warnings_as_errors],
+                          [AS_IF([test "x$ac_cv_vcs_checkout" = xyes],[ac_cv_warnings_as_errors=yes],
+                                 [ac_cv_warnings_as_errors=no])
+                          ])
+
+           AC_REQUIRE([_HARDEN_LINKER_FLAGS])
+           AC_REQUIRE([_HARDEN_CC_COMPILER_FLAGS])
+           AC_REQUIRE([_HARDEN_CXX_COMPILER_FLAGS])
+           AC_REQUIRE([_CC_OTHER_FLAGS])
+           ])

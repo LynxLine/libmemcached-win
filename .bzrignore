@@ -1,6 +1,3 @@
-*.BASE
-*.OTHER
-*.THIS
 *.exe
 *.gz
 *.lo
@@ -49,9 +46,9 @@ clients/memrm
 clients/memslap
 clients/memstat
 clients/memtouch
-config.h
-config.h.in
-config.in
+mem_config.h
+mem_config.h.in
+mem_config.in
 config.log
 config.status
 config/compile
@@ -63,7 +60,6 @@ config/ltmain.sh
 config/missing
 config/pandora_vc_revinfo
 config/top.h
-configure
 configure.scan
 docs/*.[13]
 docs/*.html
@@ -91,7 +87,6 @@ libtest/unittest
 libtest/version.h
 libtest/wait
 libtool
-m4/.git
 m4/libtool.m4
 m4/libtool.m4 
 m4/ltoptions.m4

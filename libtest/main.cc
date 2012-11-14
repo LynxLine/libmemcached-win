@@ -34,7 +34,7 @@
  *
  */
 
-#include <config.h>
+#include "mem_config.h"
 #include <libtest/common.h>
 
 #include <cassert>
@@ -341,11 +341,6 @@ int main(int argc, char *argv[])
   catch (libtest::fatal& e)
   {
     std::cerr << "FATAL:" << e.what() << std::endl;
-    exit_code= EXIT_FAILURE;
-  }
-  catch (libtest::start& e)
-  {
-    std::cerr << "Failure to start:" << e.what() << std::endl;
     exit_code= EXIT_FAILURE;
   }
   catch (libtest::disconnected& e)

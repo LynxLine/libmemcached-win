@@ -34,7 +34,7 @@
  *
  */
 
-#include <config.h>
+#include "mem_config.h"
 #include <libtest/common.h>
 
 #include <cassert>
@@ -259,22 +259,18 @@ bool server_startup_st::start_server(const std::string& server_type, in_port_t t
         }
       }
     }
-    else if (server_type.compare("memcached-light") == 0)
-    {
-      if (MEMCACHED_LIGHT_BINARY)
-      {
-        if (HAVE_LIBMEMCACHED)
-        {
-          server= build_memcached_light("localhost", try_port);
-        }
-      }
-    }
 
     if (server == NULL)
     {
       throw libtest::fatal(LIBYATL_DEFAULT_PARAM, "Launching of an unknown server was attempted: %s", server_type.c_str());
     }
+  }
+  catch (...)
+  {
+    throw;
+  }
 
+  try {
     /*
       We will now cycle the server we have created.
     */
@@ -296,32 +292,30 @@ bool server_startup_st::start_server(const std::string& server_type, in_port_t t
     }
     else
 #endif
+
       if (server->start() == false)
+      {
+        delete server;
+        return false;
+      }
+      else
+      {
+        if (opt_startup_message)
+        {
+          Outn();
+          Out << "STARTING SERVER(pid:" << server->pid() << "): " << server->running();
+          Outn();
+        }
+      }
+  }
+  catch (libtest::disconnected& err)
+  {
+    if (fatal::is_disabled() == false and try_port != LIBTEST_FAIL_PORT)
     {
+      stream::cerr(err.file(), err.line(), err.func()) << err.what();
       delete server;
       return false;
     }
-    else
-    {
-      if (opt_startup_message)
-      {
-        Outn();
-        Out << "STARTING SERVER(pid:" << server->pid() << "): " << server->running();
-        Outn();
-      }
-    }
-  }
-  catch (libtest::start err)
-  {
-    stream::cerr(err.file(), err.line(), err.func()) << err.what();
-    delete server;
-    return false;
-  }
-  catch (libtest::disconnected err)
-  {
-    stream::cerr(err.file(), err.line(), err.func()) << err.what();
-    delete server;
-    return false;
   }
   catch (...)
   {
@@ -348,24 +342,6 @@ bool server_startup_st::start_socket_server(const std::string& server_type, cons
     else if (server_type.compare("gearmand") == 0)
     {
       Error << "Socket files are not supported for gearmand yet";
-    }
-    else if (server_type.compare("memcached-sasl") == 0)
-    {
-      if (MEMCACHED_SASL_BINARY)
-      {
-        if (HAVE_LIBMEMCACHED)
-        {
-          server= build_memcached_sasl_socket("localhost", try_port, username(), password());
-        }
-        else
-        {
-          Error << "Libmemcached was not found";
-        }
-      }
-      else
-      {
-        Error << "No memcached binary is available";
-      }
     }
     else if (server_type.compare("memcached") == 0)
     {

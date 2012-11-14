@@ -37,13 +37,19 @@
 
 #pragma once
 
-#include <config.h>
+#include <mem_config.h>
 
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
+#ifndef __WORDSIZE
+# ifdef __MINGW32__
+#  define __WORDSIZE 32
+# endif
+#endif
 
 #include <libhashkit-1.0/hashkit.h>
 #include <libhashkit/is.h>
@@ -54,10 +60,8 @@
 extern "C" {
 #endif
 
-HASHKIT_LOCAL
 void md5_signature(const unsigned char *key, unsigned int length, unsigned char *result);
 
-HASHKIT_LOCAL
 int update_continuum(hashkit_st *hashkit);
 
 #ifdef __cplusplus
