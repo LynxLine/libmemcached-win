@@ -1,6 +1,6 @@
 /*  vim:expandtab:shiftwidth=2:tabstop=2:smarttab:
  * 
- *  Libmemcached C test app
+ *  Libmemcached C++ test app
  *
  *  Copyright (C) 2011 Data Differential, http://datadifferential.com/
  *
@@ -38,9 +38,9 @@
  * @file @brief C dummy test, aka testing C linking, etc
  */
 
-#include <stdlib.h>
+#include <cstdlib>
 
-#include <libmemcached/memcached.h>
+#include <libmemcached-1.2/memcached.h>
 
 int main(void)
 {
@@ -49,6 +49,12 @@ int main(void)
   (void)memcached_continue(MEMCACHED_SUCCESS);
 
   memcached_st *memc= memcached_create(NULL);
+
+  if (memc == NULL)
+  {
+    return EXIT_FAILURE;
+  }
+
   memcached_free(memc);
 
   return EXIT_SUCCESS;

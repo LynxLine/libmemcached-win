@@ -35,14 +35,14 @@
  *
  */
 
-#include <config.h>
+#include <mem_config.h>
 
 #include <libtest/test.hpp>
 #include <climits>
 
 using namespace libtest;
 
-#include <libmemcached/memcached.h>
+#include <libmemcached-1.2/memcached.h>
 #include <tests/debug.h>
 #include <tests/print.h>
 

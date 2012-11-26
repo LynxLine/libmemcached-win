@@ -1,6 +1,6 @@
 # vim:ft=automake
 
-ACLOCAL_AMFLAGS = -I m4 -I libtest/m4 --install -Wall -Werror
+ACLOCAL_AMFLAGS = -I m4 -I libtest/m4
 
 # includes append to these:
 SUFFIXES =
@@ -20,13 +20,14 @@ check_PROGRAMS =
 EXTRA_HEADERS =
 BUILT_SOURCES=
 EXTRA_DIST=
+dist_man_MANS=
+MAINTAINERCLEANFILES=
 
 #includes additional rules from aminclude.am
 @INC_AMINCLUDE@
 
 DISTCLEANFILES+= aminclude.am
 
-EXTRA_DIST+= ${srcdir}/m4/pandora_*.m4
 EXTRA_DIST+= .quickly
 EXTRA_DIST+= README.FIRST
 EXTRA_DIST+= README.win32
@@ -37,22 +38,19 @@ dist_aclocal_DATA=
 include libtest/include.am
 
 include libhashkit-1.0/include.am
-include libmemcached-1.0/include.am
-include libmemcachedprotocol-0.0/include.am
-include libmemcachedutil-1.0/include.am
+include libmemcached-1.2/include.am
+include libmemcachedutil-1.2/include.am
 
 include clients/include.am
 include docs/include.am
 include man/include.am
-include example/include.am
 include libhashkit/include.am
 include libmemcached/include.am
 include libmemcachedutil/include.am
-include libmemcachedprotocol/include.am
 include libmemcachedinternal/include.am
 include libmemcachedinternal/util/include.am
 include poll/include.am
-include rpm.am
+include rpm/include.am
 include support/include.am
 include tests/include.am
 include util/include.am
@@ -61,8 +59,6 @@ include win32/include.am
 include m4/include.am
 
 TESTS += ${check_PROGRAMS}
-
-EXTRA_DIST+= ${man_MANS}
 
 merge-clean:
 	@find ./ | $(GREP) \.gcda | xargs rm -f
@@ -98,6 +94,36 @@ lcov-clean: clean
 
 DISTCLEANFILES+= config/top.h
 
+clean-local: clean-libtest-check clean-docs-check
+
+maintainer-clean-local:
+	find . -type f -name '*~' -exec rm -f '{}' \;
+	-rm -f @PACKAGE@-*.rpm
+	-rm -f @PACKAGE@-*.tar.gz
+	-rm -f man/*.1
+	-rm -f man/*.3
+	-rm -f man/*.8
+	-rm -rf man/.doctrees/
+	-rm -f Makefile.in
+	-rm -f aclocal.m4
+	-rm -f build-aux/compile
+	-rm -f build-aux/config.guess
+	-rm -f build-aux/config.sub
+	-rm -f build-aux/depcomp
+	-rm -f build-aux/install-sh
+	-rm -f build-aux/ltmain.sh
+	-rm -f build-aux/missing
+	-rm -f mem_config.in
+	-rm -f config.log
+	-rm -f config.status
+	-rm -f configure
+	-rm -f m4/libtool.m4
+	-rm -f m4/ltoptions.m4
+	-rm -f m4/ltsugar.m4
+	-rm -f m4/ltversion.m4
+	-rm -f m4/lt~obsolete.m4
+	-rmdir build-aux
+
 install-website: html-local
-	@rm -r -f /var/www/libmemcached/*
+	-rm -r -f /var/www/libmemcached/*
 	@cp -r docs/html /var/www/libmemcached

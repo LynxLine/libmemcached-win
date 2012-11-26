@@ -35,14 +35,14 @@
  *
  */
 
-#include <config.h>
+#include <mem_config.h>
 #include <libtest/test.hpp>
 
 using namespace libtest;
 
 #include <tests/virtual_buckets.h>
 
-#include <libmemcached/memcached.h>
+#include <libmemcached-1.2/memcached.h>
 
 #include <cstring>
 

@@ -1,4 +1,5 @@
 /* LibMemcached
+ * Copyright (C) 2011-2012 Data Differential, http://datadifferential.com/
  * Copyright (C) 2006-2009 Brian Aker
  * All rights reserved.
  *
@@ -12,7 +13,7 @@
 /* -*- Mode: C; tab-width: 2; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 #undef NDEBUG
 
-#include <config.h>
+#include <mem_config.h>
 
 #ifdef HAVE_POLL_H
 #include <poll.h>
@@ -33,11 +34,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <libmemcached-1.0/memcached.h>
-#include <libmemcached/socket.hpp>
-#include <libmemcached/memcached/protocol_binary.h>
-#include <libmemcached/byteorder.h>
-#include <clients/utilities.h>
+#include <libmemcached-1.2/memcached.h>
+
+#include "libmemcached/socket.hpp"
+#include "libmemcached/memcached/protocol_binary.h"
+#include "libmemcached/byteorder.h"
+#include "clients/utilities.h"
 
 #include <vector>
 

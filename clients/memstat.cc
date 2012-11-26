@@ -1,4 +1,5 @@
 /* LibMemcached
+ * Copyright (C) 2011-2012 Data Differential, http://datadifferential.com/
  * Copyright (C) 2006-2009 Brian Aker
  * All rights reserved.
  *
@@ -11,7 +12,7 @@
  *          Brian Aker
  *          Toru Maesaka
  */
-#include <config.h>
+#include <mem_config.h>
 
 #include <cstdio>
 #include <cstring>
@@ -25,7 +26,7 @@
 #include <sys/types.h>
 #include <sys/types.h>
 
-#include <libmemcached/memcached.h>
+#include <libmemcached-1.2/memcached.h>
 
 #include "client_options.h"
 #include "utilities.h"

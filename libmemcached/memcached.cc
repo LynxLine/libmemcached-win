@@ -58,7 +58,7 @@ static inline bool _memcached_init(memcached_st *self)
   self->flags.tcp_nodelay= false;
   self->flags.use_sort_hosts= false;
   self->flags.use_udp= false;
-  self->flags.verify_key= false;
+  self->flags.verify_key= true;
   self->flags.tcp_keepalive= false;
   self->flags.is_aes= false;
   self->flags.is_fetching_version= false;

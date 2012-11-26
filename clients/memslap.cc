@@ -2,7 +2,7 @@
  * 
  *  Libmemcached library
  *
- *  Copyright (C) 2011 Data Differential, http://datadifferential.com/
+ *  Copyright (C) 2011-2012 Data Differential, http://datadifferential.com/
  *  Copyright (C) 2006-2009 Brian Aker All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
  */
 
 
-#include <config.h>
+#include <mem_config.h>
 
 #include <cassert>
 #include <cstdio>
@@ -55,7 +55,7 @@
 
 #include <iostream>
 
-#include <libmemcached/memcached.h>
+#include <libmemcached-1.2/memcached.h>
 
 #include "client_options.h"
 #include "utilities.h"

@@ -34,10 +34,12 @@
  *
  */
 
-#include <config.h>
+#include "mem_config.h"
 #include <libtest/common.h>
 
 #include <unistd.h>
+
+#pragma GCC diagnostic ignored "-Wundef"
 
 #if defined(HAVE_SYS_SYSCTL_H) && HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>

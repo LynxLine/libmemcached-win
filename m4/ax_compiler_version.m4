@@ -4,8 +4,7 @@
 #
 # SYNOPSIS
 #
-#   AX_C_COMPILER_VERSION
-#   AX_CXX_COMPILER_VERSION
+#   AX_COMPILER_VERSION()
 #
 # DESCRIPTION
 #
@@ -44,37 +43,58 @@
 #  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#serial 3
+#serial 5
+AC_DEFUN([_C_COMPILER_VERSION],
+    [AC_MSG_CHECKING([C Compiler version])
 
-  AC_DEFUN([AX_C_COMPILER_VERSION],[
-      AC_REQUIRE([AX_COMPILER_VENDOR])
-      AC_MSG_CHECKING("C Compiler version")
+    AS_CASE(["$ax_cv_c_compiler_vendor"],
+      [sun],[ax_c_compiler_version=`$CC -V 2>&1 | sed 1q`],
+      [intel],[ax_c_compiler_version=`$CC --version 2>&1 | sed 1q`],
+      [clang],[ax_c_compiler_version=`$CC --version 2>&1 | sed 1q`],
+      [gnu],[ax_c_compiler_version=`$CC --version | sed 1q`],
+      [mingw],[ax_c_compiler_version=`$CC --version | sed 1q`],
+      [ax_c_compiler_version="unknown: $ax_cv_c_compiler_vendor"])
 
-      AC_CHECK_DECL([__GNUC_PATCHLEVEL__],[GNUCC="yes"], [GNUCC="no"])
-      AC_CHECK_DECL([__SUNPRO_C], [SUNCC="yes"],[SUNCC="no"])
-      AC_CHECK_DECL([__ICC], [INTELCC="yes"],[INTELCC="no"])
-      AC_CHECK_DECL([__clang__], [CLANG="yes"],[CLANG="no"])
+    AC_MSG_RESULT(["$ax_c_compiler_version"])
+    AC_SUBST([CC_VERSION_VENDOR],["$ax_cv_c_compiler_vendor"])
+    AC_SUBST([CC_VERSION],["$ax_c_compiler_version"])
+  ])
 
-      ax_cc_version=unknown
-      AS_IF([test "$ax_cc_version" = "unknown"],[AS_IF([test "$SUNCC" = "yes"],[ax_cc_version=`$CC -V 2>&1 | sed 1q`])])
-      AS_IF([test "$ax_cc_version" = "unknown"],[AS_IF([test "$CLANG" = "yes"],[ax_cc_version=`$CC --version 2>&1 | sed 1q` ])])
-      AS_IF([test "$ax_cc_version" = "unknown"],[AS_IF([test "$INTELCC" = "yes"],[ax_cc_version=`$CC --version 2>&1 | sed 1q` ])])
-      AS_IF([test "$ax_cc_version" = "unknown"],[AS_IF([test "$GNUCC" = "yes"],[ax_cc_version=`$CC --version | sed 1q` ])])
+AC_DEFUN([_CXX_COMPILER_VERSION],
+    [AC_MSG_CHECKING([C++ Compiler version])
 
-      AC_MSG_RESULT(["$ax_cc_version"])
-      AC_SUBST([CC_VERSION],["$ax_cc_version"])
+    AS_CASE(["$ax_cv_c_compiler_vendor"],
+      [sun],[ax_cxx_compiler_version=`$CXX -V 2>&1 | sed 1q`],
+      [intel],[ax_cxx_compiler_version=`$CXX --version 2>&1 | sed 1q`],
+      [clang],[ax_cxx_compiler_version=`$CXX --version 2>&1 | sed 1q`],
+      [gnu],[ax_cxx_compiler_version=`$CXX --version | sed 1q`],
+      [mingw],[ax_cxx_compiler_version=`$CXX --version | sed 1q`],
+      [ax_cxx_compiler_version="unknown: $ax_cv_c_compiler_vendor"])
+
+    AC_MSG_RESULT(["$ax_cxx_compiler_version"])
+    AC_SUBST([CXX_VERSION_VENDOR],["$ax_cv_c_compiler_vendor"])
+    AC_SUBST([CXX_VERSION],["$ax_cxx_compiler_version"])
+    ])
+
+AC_DEFUN([AX_COMPILER_VERSION],
+    [AC_REQUIRE([AX_COMPILER_VENDOR])
+
+    AC_MSG_CHECKING([MINGW])
+    AC_CHECK_DECL([__MINGW32__],
+      [MINGW=yes
+      ax_c_compiler_version_vendor=mingw],
+      [MINGW=no])
+    AC_MSG_RESULT([$MINGW])
+
+    AC_REQUIRE([_C_COMPILER_VERSION])
+    AC_REQUIRE([_CXX_COMPILER_VERSION])
+    AS_IF([test "x$GCC" = xyes],
+      [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if !defined(__GNUC__) || (__GNUC__ < 4) || ((__GNUC__ >= 4) && (__GNUC_MINOR__ < 7))
+# error GCC is Too Old!
+#endif
+          ]])],
+        [ac_c_gcc_recent=yes],
+        [ac_c_gcc_recent=no])
       ])
-
-  AC_DEFUN([AX_CXX_COMPILER_VERSION], [
-      AC_REQUIRE([AX_C_COMPILER_VERSION])
-      AC_MSG_CHECKING("C++ Compiler version")
-
-      ax_cxx_version=unknown
-      AS_IF([test "$ax_cxx_version" = "unknown"],[AS_IF([test "$GNUCC" = "yes"],[ax_cxx_version=`$CXX --version | sed 1q`])])
-      AS_IF([test "$ax_cxx_version" = "unknown"],[AS_IF([test "$SUNCC" = "yes"],[ax_cxx_version=`$CXX -V 2>&1 | sed 1q`])])
-      AS_IF([test "$ax_cxx_version" = "unknown"],[AS_IF([test "$CLANG" = "yes"],[ax_cxx_version=`$CXX --version 2>&1 | sed 1q`])])
-      AS_IF([test "$ax_cxx_version" = "unknown"],[AS_IF([test "$INTELCC" = "yes"],[ax_cc_version=`$CCX --version 2>&1 | sed 1q` ])])
-
-      AC_MSG_RESULT(["$ax_cxx_version"])
-      AC_SUBST([CXX_VERSION], ["$ax_cxx_version"])
-      ])
+    ])

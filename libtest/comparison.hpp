@@ -39,8 +39,8 @@
 #include <typeinfo>
 
 #if defined(HAVE_LIBMEMCACHED) && HAVE_LIBMEMCACHED
-#include <libmemcached-1.0/memcached.h>
-#include <libmemcachedutil-1.0/ostream.hpp>
+#include <libmemcached-1.2/memcached.h>
+#include <libmemcachedutil-1.2/ostream.hpp>
 #include <libtest/memcached.hpp>
 #endif
 
@@ -51,6 +51,9 @@
 namespace libtest {
 
 LIBTEST_API
+bool jenkins_is_caller(void);
+
+LIBTEST_API
 bool gdb_is_caller(void);
 
 LIBTEST_API
@@ -58,6 +61,9 @@ bool valgrind_is_caller(void);
 
 LIBTEST_API
 bool _in_valgrind(const char *file, int line, const char *func);
+
+LIBTEST_API
+bool helgrind_is_caller(void);
 
 template <class T_comparable>
 bool _compare_truth(const char *file, int line, const char *func, T_comparable __expected, const char *assertation_label)

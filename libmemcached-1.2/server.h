@@ -2,8 +2,8 @@
  * 
  *  Libmemcached library
  *
- *  Copyright (C) 2011 Data Differential, http://datadifferential.com/ 
- *  All rights reserved.
+ *  Copyright (C) 2011 Data Differential, http://datadifferential.com/
+ *  Copyright (C) 2006-2009 Brian Aker All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are
@@ -38,6 +38,8 @@
 
 #pragma once
 
+#include <libmemcached-1.2/struct/server.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -55,12 +57,31 @@ LIBMEMCACHED_API
                                                        memcached_return_t *error);
 
 LIBMEMCACHED_API
+void memcached_server_error_reset(memcached_server_st *ptr);
+
+LIBMEMCACHED_API
+void memcached_server_free(memcached_server_st *ptr);
+
+LIBMEMCACHED_API
+memcached_server_instance_st memcached_server_get_last_disconnect(const memcached_st *ptr);
+
+
+LIBMEMCACHED_API
+memcached_return_t memcached_server_add_udp(memcached_st *ptr,
+                                            const char *hostname,
+                                            in_port_t port);
+LIBMEMCACHED_API
 memcached_return_t memcached_server_add_unix_socket(memcached_st *ptr,
                                                     const char *filename);
 LIBMEMCACHED_API
 memcached_return_t memcached_server_add(memcached_st *ptr,
                                         const char *hostname, in_port_t port);
 
+LIBMEMCACHED_API
+memcached_return_t memcached_server_add_udp_with_weight(memcached_st *ptr,
+                                                        const char *hostname,
+                                                        in_port_t port,
+                                                        uint32_t weight);
 LIBMEMCACHED_API
 memcached_return_t memcached_server_add_unix_socket_with_weight(memcached_st *ptr,
                                                                 const char *filename,
@@ -74,13 +95,28 @@ memcached_return_t memcached_server_add_with_weight(memcached_st *ptr, const cha
   Operations on Single Servers.
 */
 LIBMEMCACHED_API
+uint32_t memcached_server_response_count(const memcached_server_instance_st self);
+
+LIBMEMCACHED_API
 const char *memcached_server_name(const memcached_server_instance_st self);
 
 LIBMEMCACHED_API
 in_port_t memcached_server_port(const memcached_server_instance_st self);
 
 LIBMEMCACHED_API
+void memcached_instance_next_retry(memcached_server_instance_st self, const time_t absolute_time);
+
+LIBMEMCACHED_API
 const char *memcached_server_type(const memcached_server_instance_st ptr);
+
+LIBMEMCACHED_API
+uint8_t memcached_server_major_version(const memcached_server_instance_st ptr);
+
+LIBMEMCACHED_API
+uint8_t memcached_server_minor_version(const memcached_server_instance_st ptr);
+
+LIBMEMCACHED_API
+uint8_t memcached_server_micro_version(const memcached_server_instance_st ptr);
 
 #ifdef __cplusplus
 } // extern "C"

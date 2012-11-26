@@ -35,7 +35,7 @@
  *
  */
 
-#include <config.h>
+#include <mem_config.h>
 #include <libtest/test.hpp>
 
 using namespace libtest;
@@ -43,7 +43,7 @@ using namespace libtest;
 
 #include <iostream>
 
-#include <libmemcached/memcached.h>
+#include <libmemcached-1.2/memcached.h>
 
 #include "tests/print.h"
 

@@ -35,13 +35,13 @@
  *
  */
 
-#include <config.h>
+#include <mem_config.h>
 #include <libtest/test.hpp>
 
 using namespace libtest;
 
-#include <libmemcached-1.0/memcached.h>
-#include <libmemcachedutil-1.0/util.h>
+#include <libmemcached-1.2/memcached.h>
+#include <libmemcachedutil-1.2/util.h>
 
 #include "tests/touch.h"
 
@@ -60,7 +60,7 @@ test_return_t test_memcached_touch(memcached_st *memc)
 
   size_t len;
   uint32_t flags;
-  memcached_return rc;
+  memcached_return_t rc;
 
   test_null(memcached_get(memc, 
                           test_literal_param(__func__),
@@ -106,7 +106,7 @@ test_return_t test_memcached_touch_by_key(memcached_st *memc)
 
   size_t len;
   uint32_t flags;
-  memcached_return rc;
+  memcached_return_t rc;
 
   test_null(memcached_get_by_key(memc, 
                                  test_literal_param("grouping_key"),

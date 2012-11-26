@@ -2,8 +2,8 @@
  * 
  *  Libmemcached library
  *
- *  Copyright (C) 2011 Data Differential, http://datadifferential.com/ 
- *  All rights reserved.
+ *  Copyright (C) 2011 Data Differential, http://datadifferential.com/
+ *  Copyright (C) 2006-2009 Brian Aker All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are
@@ -37,26 +37,59 @@
 
 #pragma once
 
-#include <inttypes.h>
-#include <stdlib.h>
-#include <sys/types.h>
-
-
-#if !defined(__cplusplus)
-# include <stdbool.h>
+/* This seems to be required for older compilers @note http://stackoverflow.com/questions/8132399/how-to-printf-uint64-t  */
+#ifndef __STDC_FORMAT_MACROS
+#  define __STDC_FORMAT_MACROS
 #endif
 
-#include <libmemcached-1.0/visibility.h>
-#include <libmemcached-1.0/configure.h>
-#include <libmemcached-1.0/platform.h>
-#include <libmemcached-1.0/constants.h>
-#include <libmemcached-1.0/return.h>
-#include <libmemcached-1.0/types.h>
-#include <libmemcached-1.0/basic_string.h>
-#include <libmemcached-1.0/string.h>
-#include <libmemcached-1.0/error.h>
-#include <libmemcached-1.0/stats.h>
+#ifdef __cplusplus
+#  include <tr1/cinttypes>
+#  include <cstddef>
+#  include <cstdlib>
+#else
+#  include <inttypes.h>
+#  include <stddef.h>
+#  include <stdlib.h>
+#  include <stdbool.h>
+#endif
+
+#include <sys/types.h>
+
+#include <libmemcached-1.2/visibility.h>
+#include <libmemcached-1.2/configure.h>
+#include <libmemcached-1.2/platform.h>
+
+#include <libmemcached-1.2/limits.h>
+#include <libmemcached-1.2/defaults.h>
+
+#include <libmemcached-1.2/types/behavior.h>
+#include <libmemcached-1.2/types/callback.h>
+#include <libmemcached-1.2/types/connection.h>
+#include <libmemcached-1.2/types/hash.h>
+#include <libmemcached-1.2/types/return.h>
+#include <libmemcached-1.2/types/server_distribution.h>
+
+#include <libmemcached-1.2/return.h>
+
+#include <libmemcached-1.2/types.h>
+#include <libmemcached-1.2/callbacks.h>
+#include <libmemcached-1.2/alloc.h>
+#include <libmemcached-1.2/triggers.h>
+
 #include <libhashkit-1.0/hashkit.h>
+
+#include <libmemcached-1.2/struct/callback.h>
+#include <libmemcached-1.2/struct/string.h>
+#include <libmemcached-1.2/struct/result.h>
+#include <libmemcached-1.2/struct/allocator.h>
+#include <libmemcached-1.2/struct/sasl.h>
+#include <libmemcached-1.2/struct/memcached.h>
+#include <libmemcached-1.2/struct/server.h>
+#include <libmemcached-1.2/struct/stat.h>
+
+#include <libmemcached-1.2/basic_string.h>
+#include <libmemcached-1.2/error.h>
+#include <libmemcached-1.2/stats.h>
 
 // Everything above this line must be in the order specified.
 #include <libmemcached-1.2/allocators.h>
@@ -66,6 +99,7 @@
 #include <libmemcached-1.2/callback.h>
 #include <libmemcached-1.2/delete.h>
 #include <libmemcached-1.2/dump.h>
+#include <libmemcached-1.2/encoding_key.h>
 #include <libmemcached-1.2/exist.h>
 #include <libmemcached-1.2/fetch.h>
 #include <libmemcached-1.2/flush.h>

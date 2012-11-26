@@ -1,4 +1,5 @@
 /* LibMemcached
+ * Copyright (C) 2011-2012 Data Differential, http://datadifferential.com/
  * Copyright (C) 2006-2009 Brian Aker
  * All rights reserved.
  *
@@ -9,7 +10,7 @@
  *
  */
 
-#include <config.h>
+#include <mem_config.h>
 
 #include <stdint.h>
 

@@ -2,8 +2,8 @@
  * 
  *  Libmemcached library
  *
- *  Copyright (C) 2011 Data Differential, http://datadifferential.com/ 
- *  All rights reserved.
+ *  Copyright (C) 2011 Data Differential, http://datadifferential.com/
+ *  Copyright (C) 2006-2009 Brian Aker All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are
@@ -67,11 +67,4 @@ sasl_callback_t *memcached_get_sasl_callbacks(memcached_st *ptr);
 }
 #endif
 
-struct memcached_sasl_st {
-  sasl_callback_t *callbacks;
-  /*
-   ** Did we allocate data inside the callbacks, or did the user
-   ** supply that.
- */
-  bool is_allocated;
-};
+#include <libmemcached-1.2/struct/sasl.h>
