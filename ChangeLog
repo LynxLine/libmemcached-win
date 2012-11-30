@@ -1,7 +1,15 @@
+<<<<<<< TREE
 1.1.0 
 * Enable MEMCACHED_BEHAVIOR_VERIFY_KEY by default
 
 1.0.14 
+=======
+1.0.15
+
+* Added support for Murmur3 (HASHKIT_HASH_MURMUR3)
+
+1.0.14 Wed Nov 14 04:56:25 EST 2012
+>>>>>>> MERGE-SOURCE
 * CLIENT_ERROR fixed to not be treated as a fatal error.
 * Compiler fixes for older Ubuntu releases.
 
