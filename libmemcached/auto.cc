@@ -54,7 +54,7 @@ static void auto_response(org::libmemcached::Instance* instance, const bool repl
 
   if (memcached_success(rc))
   {
-    *value= instance->root->result.numeric_value;
+    *value= instance->root->result.impl()->numeric_value;
   }
   else
   {

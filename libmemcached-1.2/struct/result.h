@@ -37,20 +37,26 @@
 
 #pragma once
 
-struct memcached_result_st {
-  uint32_t item_flags;
-  time_t item_expiration;
-  size_t key_length;
-  uint64_t item_cas;
-  struct memcached_st *root;
-  memcached_string_st value;
-  uint64_t numeric_value;
-  uint64_t count;
-  char item_key[MEMCACHED_MAX_KEY];
-  struct {
-    bool is_allocated:1;
-    bool is_initialized:1;
-  } options;
-  /* Add result callback function */
-};
+#ifdef __cplusplus
+struct Result;
+#endif
 
+struct memcached_result_st
+{
+  struct {
+    bool is_allocated;
+    bool is_initialized;
+  } options;
+  void *_impl;
+#ifdef __cplusplus
+  struct Result* impl() const
+  {
+    return (Result*)(_impl);
+  }
+
+  void impl(Result* impl_)
+  {
+    _impl= impl_;
+  }
+#endif
+};

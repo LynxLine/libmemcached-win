@@ -37,19 +37,19 @@
 
 #include <libmemcached/common.h>
 
-char *memcached_fetch(memcached_st *ptr, char *key, size_t *key_length, 
+char *memcached_fetch(memcached_st *memc, char *key, size_t *key_length, 
                       size_t *value_length, 
                       uint32_t *flags,
                       memcached_return_t *error)
 {
-  memcached_result_st *result_buffer= &ptr->result;
+  memcached_result_st *result_buffer= &memc->result;
   memcached_return_t unused;
   if (error == NULL)
   {
     error= &unused;
   }
 
-  if (memcached_is_udp(ptr))
+  if (memcached_is_udp(memc))
   {
     if (value_length)
     {
@@ -75,7 +75,7 @@ char *memcached_fetch(memcached_st *ptr, char *key, size_t *key_length,
     return NULL;
   }
 
-  result_buffer= memcached_fetch_result(ptr, result_buffer, error);
+  result_buffer= memcached_fetch_result(memc, result_buffer, error);
   if (result_buffer == NULL or memcached_failed(*error))
   {
     WATCHPOINT_ASSERT(result_buffer == NULL);
@@ -104,12 +104,12 @@ char *memcached_fetch(memcached_st *ptr, char *key, size_t *key_length,
 
   if (value_length)
   {
-    *value_length= memcached_string_length(&result_buffer->value);
+    *value_length= memcached_string_length(&result_buffer->impl()->value);
   }
 
   if (key)
   {
-    if (result_buffer->key_length > MEMCACHED_MAX_KEY)
+    if (result_buffer->impl()->key_length > MEMCACHED_MAX_KEY)
     {
       *error= MEMCACHED_KEY_TOO_BIG;
       if (value_length)
@@ -135,22 +135,22 @@ char *memcached_fetch(memcached_st *ptr, char *key, size_t *key_length,
       return NULL;
     }
 
-    strncpy(key, result_buffer->item_key, result_buffer->key_length); // For the binary protocol we will cut off the key :(
+    strncpy(key, result_buffer->impl()->item_key, result_buffer->impl()->key_length); // For the binary protocol we will cut off the key :(
     if (key_length)
     {
-      *key_length= result_buffer->key_length;
+      *key_length= result_buffer->impl()->key_length;
     }
   }
 
   if (flags)
   {
-    *flags= result_buffer->item_flags;
+    *flags= result_buffer->impl()->item_flags;
   }
 
-  return memcached_string_take_value(&result_buffer->value);
+  return memcached_string_take_value(&result_buffer->impl()->value);
 }
 
-memcached_result_st *memcached_fetch_result(memcached_st *ptr,
+memcached_result_st *memcached_fetch_result(memcached_st *memc,
                                             memcached_result_st *result,
                                             memcached_return_t *error)
 {
@@ -160,13 +160,13 @@ memcached_result_st *memcached_fetch_result(memcached_st *ptr,
     error= &unused;
   }
 
-  if (ptr == NULL)
+  if (memc == NULL)
   {
     *error= MEMCACHED_INVALID_ARGUMENTS;
     return NULL;
   }
 
-  if (memcached_is_udp(ptr))
+  if (memcached_is_udp(memc))
   {
     *error= MEMCACHED_NOT_SUPPORTED;
     return NULL;
@@ -176,9 +176,9 @@ memcached_result_st *memcached_fetch_result(memcached_st *ptr,
   {
     // If we have already initialized (ie it is in use) our internal, we
     // create one.
-    if (memcached_is_initialized(&ptr->result))
+    if (memcached_is_initialized(&memc->result))
     {
-      if ((result= memcached_result_create(ptr, NULL)) == NULL)
+      if ((result= memcached_result_create(memc, NULL)) == NULL)
       {
         *error= MEMCACHED_MEMORY_ALLOCATION_FAILURE;
         return NULL;
@@ -186,13 +186,13 @@ memcached_result_st *memcached_fetch_result(memcached_st *ptr,
     }
     else
     {
-      result= memcached_result_create(ptr, &ptr->result);
+      result= memcached_result_create(memc, &memc->result);
     }
   }
 
   *error= MEMCACHED_MAXIMUM_RETURN; // We use this to see if we ever go into the loop
   org::libmemcached::Instance *server;
-  while ((server= memcached_io_get_readable_server(ptr)))
+  while ((server= memcached_io_get_readable_server(memc)))
   {
     char buffer[MEMCACHED_DEFAULT_COMMAND_SIZE];
     *error= memcached_response(server, buffer, sizeof(buffer), result);
@@ -203,7 +203,7 @@ memcached_result_st *memcached_fetch_result(memcached_st *ptr,
     }
     else if (*error == MEMCACHED_SUCCESS)
     {
-      result->count++;
+      result->impl()->count++;
       return result;
     }
     else if (*error == MEMCACHED_END)
@@ -216,11 +216,11 @@ memcached_result_st *memcached_fetch_result(memcached_st *ptr,
     }
   }
 
-  if (*error == MEMCACHED_NOTFOUND and result->count)
+  if (*error == MEMCACHED_NOTFOUND and result->impl()->count)
   {
     *error= MEMCACHED_END;
   }
-  else if (*error == MEMCACHED_MAXIMUM_RETURN and result->count)
+  else if (*error == MEMCACHED_MAXIMUM_RETURN and result->impl()->count)
   {
     *error= MEMCACHED_END;
   }
@@ -232,7 +232,7 @@ memcached_result_st *memcached_fetch_result(memcached_st *ptr,
   {
     *error= MEMCACHED_END;
   }
-  else if (result->count == 0)
+  else if (result->impl()->count == 0)
   {
     *error= MEMCACHED_NOTFOUND;
   }
@@ -244,23 +244,23 @@ memcached_result_st *memcached_fetch_result(memcached_st *ptr,
   }
   else
   {
-    result->count= 0;
-    memcached_string_reset(&result->value);
+    result->impl()->count= 0;
+    memcached_string_reset(&result->impl()->value);
   }
 
   return NULL;
 }
 
-memcached_return_t memcached_fetch_execute(memcached_st *ptr, 
+memcached_return_t memcached_fetch_execute(memcached_st *memc, 
                                            memcached_execute_fn *callback,
                                            void *context,
                                            uint32_t number_of_callbacks)
 {
-  memcached_result_st *result= &ptr->result;
+  memcached_result_st *result= &memc->result;
   memcached_return_t rc;
   bool some_errors= false;
 
-  while ((result= memcached_fetch_result(ptr, result, &rc)))
+  while ((result= memcached_fetch_result(memc, result, &rc)))
   {
     if (memcached_failed(rc) and rc == MEMCACHED_NOTFOUND)
     {
@@ -268,18 +268,18 @@ memcached_return_t memcached_fetch_execute(memcached_st *ptr,
     }
     else if (memcached_failed(rc))
     {
-      memcached_set_error(*ptr, rc, MEMCACHED_AT);
+      memcached_set_error(*memc, rc, MEMCACHED_AT);
       some_errors= true;
       continue;
     }
 
     for (uint32_t x= 0; x < number_of_callbacks; x++)
     {
-      memcached_return_t ret= (*callback[x])(ptr, result, context);
+      memcached_return_t ret= (*callback[x])(memc, result, context);
       if (memcached_failed(ret))
       {
         some_errors= true;
-        memcached_set_error(*ptr, ret, MEMCACHED_AT);
+        memcached_set_error(*memc, ret, MEMCACHED_AT);
         break;
       }
     }

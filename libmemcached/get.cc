@@ -160,7 +160,7 @@ char *memcached_get_by_key(memcached_st *ptr,
           *error= rc;
           *value_length= memcached_result_length(result_ptr);
           *flags= memcached_result_flags(result_ptr);
-          char *result_value=  memcached_string_take_value(&result_ptr->value);
+          char *result_value=  memcached_string_take_value(&result_ptr->impl()->value);
           memcached_result_free(result_ptr);
 
           return result_value;

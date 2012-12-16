@@ -47,8 +47,9 @@
 */
 
 #include <libmemcached-1.2/memcached.h>
-#include <libmemcached/is.h>
-#include <libmemcached/server_instance.h>
+#include "libmemcached/is.h"
+#include "libmemcached/server_instance.h"
+#include "libmemcached/result.h"
 
 #include <libhashkit-1.0/hashkit.h>
 
@@ -693,7 +694,7 @@ test_return_t cas2_test(memcached_st *memc)
   memcached_return_t rc;
   results= memcached_fetch_result(memc, results, &rc);
   test_true(results);
-  test_true(results->item_cas);
+  test_true(results->impl()->item_cas);
   test_compare(MEMCACHED_SUCCESS, rc);
   test_true(memcached_result_cas(results));
 
