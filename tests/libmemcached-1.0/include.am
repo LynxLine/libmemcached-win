@@ -177,6 +177,9 @@ noinst_PROGRAMS+= tests/libmemcached-1.0/testsocket
 test-socket: tests/libmemcached-1.0/testsocket
 	@tests/libmemcached-1.0/testsocket
 
+valgrind-socket: tests/libmemcached-1.0/testsocket
+	@$(VALGRIND_COMMAND) tests/libmemcached-1.0/testsocket
+
 gdb-socket: tests/libmemcached-1.0/testsocket
 	@$(GDB_COMMAND) tests/libmemcached-1.0/testsocket
 

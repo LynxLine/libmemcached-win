@@ -60,8 +60,8 @@ static memcached_return_t textual_value_fetch(org::libmemcached::Instance* insta
 
   /* We load the key */
   {
-    char *key= result->item_key;
-    result->key_length= 0;
+    char *key= result->impl()->item_key;
+    result->impl()->key_length= 0;
 
     for (ptrdiff_t prefix_length= memcached_array_size(instance->root->_namespace); !(iscntrl(*string_ptr) || isspace(*string_ptr)) ; string_ptr++)
     {
@@ -69,12 +69,12 @@ static memcached_return_t textual_value_fetch(org::libmemcached::Instance* insta
       {
         *key= *string_ptr;
         key++;
-        result->key_length++;
+        result->impl()->key_length++;
       }
       else
         prefix_length--;
     }
-    result->item_key[result->key_length]= 0;
+    result->impl()->item_key[result->impl()->key_length]= 0;
   }
 
   if (end_ptr == string_ptr)
@@ -90,7 +90,7 @@ static memcached_return_t textual_value_fetch(org::libmemcached::Instance* insta
   }
 
   for (next_ptr= string_ptr; isdigit(*string_ptr); string_ptr++) {};
-  result->item_flags= (uint32_t) strtoul(next_ptr, &string_ptr, 10);
+  result->impl()->item_flags= (uint32_t) strtoul(next_ptr, &string_ptr, 10);
 
   if (end_ptr == string_ptr)
   {
@@ -122,7 +122,7 @@ static memcached_return_t textual_value_fetch(org::libmemcached::Instance* insta
   {
     string_ptr++;
     for (next_ptr= string_ptr; isdigit(*string_ptr); string_ptr++) {};
-    result->item_cas= strtoull(next_ptr, &string_ptr, 10);
+    result->impl()->item_cas= strtoull(next_ptr, &string_ptr, 10);
   }
 
   if (end_ptr < string_ptr)
@@ -131,13 +131,13 @@ static memcached_return_t textual_value_fetch(org::libmemcached::Instance* insta
   }
 
   /* We add two bytes so that we can walk the \r\n */
-  if (memcached_failed(memcached_string_check(&result->value, value_length +2)))
+  if (memcached_failed(memcached_string_check(&result->impl()->value, value_length +2)))
   {
     return memcached_set_error(*instance, MEMCACHED_MEMORY_ALLOCATION_FAILURE, MEMCACHED_AT);
   }
 
   {
-    char *value_ptr= memcached_string_value_mutable(&result->value);
+    char *value_ptr= memcached_string_value_mutable(&result->impl()->value);
     /*
       We read the \r\n into the string since not doing so is more
       cycles then the waster of memory to do so.
@@ -166,10 +166,10 @@ static memcached_return_t textual_value_fetch(org::libmemcached::Instance* insta
   /* This next bit blows the API, but this is internal....*/
   {
     char *char_ptr;
-    char_ptr= memcached_string_value_mutable(&result->value);;
+    char_ptr= memcached_string_value_mutable(&result->impl()->value);
     char_ptr[value_length]= 0;
     char_ptr[value_length +1]= 0;
-    memcached_string_set_length(&result->value, value_length);
+    memcached_string_set_length(&result->impl()->value, value_length);
   }
 
   if (memcached_is_encrypted(instance->root) and memcached_result_length(result))
@@ -446,18 +446,18 @@ static memcached_return_t textual_read_one_response(org::libmemcached::Instance*
 
       if (auto_return_value == ULLONG_MAX and errno == ERANGE)
       {
-        result->numeric_value= UINT64_MAX;
+        result->impl()->numeric_value= UINT64_MAX;
         return memcached_set_error(*instance, MEMCACHED_UNKNOWN_READ_FAILURE, MEMCACHED_AT,
                                    memcached_literal_param("Numeric response was out of range"));
       }
       else if (errno == EINVAL)
       {
-        result->numeric_value= UINT64_MAX;
+        result->impl()->numeric_value= UINT64_MAX;
         return memcached_set_error(*instance, MEMCACHED_UNKNOWN_READ_FAILURE, MEMCACHED_AT,
                                    memcached_literal_param("Numeric response was out of range"));
       }
 
-      result->numeric_value= uint64_t(auto_return_value);
+      result->impl()->numeric_value= uint64_t(auto_return_value);
 
       WATCHPOINT_STRING(buffer);
       return MEMCACHED_SUCCESS;
@@ -523,53 +523,53 @@ static memcached_return_t binary_read_one_response(org::libmemcached::Instance* 
       {
         uint16_t keylen= header.response.keylen;
         memcached_result_reset(result);
-        result->item_cas= header.response.cas;
+        result->impl()->item_cas= header.response.cas;
 
-        if ((rc= memcached_safe_read(instance, &result->item_flags, sizeof (result->item_flags))) != MEMCACHED_SUCCESS)
+        if ((rc= memcached_safe_read(instance, &result->impl()->item_flags, sizeof (result->impl()->item_flags))) != MEMCACHED_SUCCESS)
         {
           WATCHPOINT_ERROR(rc);
           return MEMCACHED_UNKNOWN_READ_FAILURE;
         }
 
-        result->item_flags= ntohl(result->item_flags);
+        result->impl()->item_flags= ntohl(result->impl()->item_flags);
         bodylen -= header.response.extlen;
 
-        result->key_length= keylen;
-        if (memcached_failed(rc= memcached_safe_read(instance, result->item_key, keylen)))
+        result->impl()->key_length= keylen;
+        if (memcached_failed(rc= memcached_safe_read(instance, result->impl()->item_key, keylen)))
         {
           WATCHPOINT_ERROR(rc);
           return MEMCACHED_UNKNOWN_READ_FAILURE;
         }
 
         // Only bother with doing this if key_length > 0
-        if (result->key_length)
+        if (result->impl()->key_length)
         {
-          if (memcached_array_size(instance->root->_namespace) and memcached_array_size(instance->root->_namespace) >= result->key_length)
+          if (memcached_array_size(instance->root->_namespace) and memcached_array_size(instance->root->_namespace) >= result->impl()->key_length)
           {
             return memcached_set_error(*instance, MEMCACHED_UNKNOWN_READ_FAILURE, MEMCACHED_AT);
           }
 
           if (memcached_array_size(instance->root->_namespace))
           {
-            result->key_length-= memcached_array_size(instance->root->_namespace);
-            memmove(result->item_key, result->item_key +memcached_array_size(instance->root->_namespace), result->key_length);
+            result->impl()->key_length-= memcached_array_size(instance->root->_namespace);
+            memmove(result->impl()->item_key, result->impl()->item_key +memcached_array_size(instance->root->_namespace), result->impl()->key_length);
           }
         }
 
         bodylen -= keylen;
-        if (memcached_failed(memcached_string_check(&result->value, bodylen)))
+        if (memcached_failed(memcached_string_check(&result->impl()->value, bodylen)))
         {
           return MEMCACHED_MEMORY_ALLOCATION_FAILURE;
         }
 
-        char *vptr= memcached_string_value_mutable(&result->value);
+        char *vptr= memcached_string_value_mutable(&result->impl()->value);
         if (memcached_failed(rc= memcached_safe_read(instance, vptr, bodylen)))
         {
           WATCHPOINT_ERROR(rc);
           return MEMCACHED_UNKNOWN_READ_FAILURE;
         }
 
-        memcached_string_set_length(&result->value, bodylen);
+        memcached_string_set_length(&result->impl()->value, bodylen);
       }
       break;
 
@@ -578,18 +578,18 @@ static memcached_return_t binary_read_one_response(org::libmemcached::Instance* 
       {
         if (bodylen != sizeof(uint64_t))
         {
-          result->numeric_value= UINT64_MAX;
+          result->impl()->numeric_value= UINT64_MAX;
           return memcached_set_error(*instance, MEMCACHED_UNKNOWN_READ_FAILURE, MEMCACHED_AT);
         }
 
         uint64_t val;
         if ((rc= memcached_safe_read(instance, &val, sizeof(val))) != MEMCACHED_SUCCESS)
         {
-          result->numeric_value= UINT64_MAX;
+          result->impl()->numeric_value= UINT64_MAX;
           return MEMCACHED_UNKNOWN_READ_FAILURE;
         }
 
-        result->numeric_value= memcached_ntohll(val);
+        result->impl()->numeric_value= memcached_ntohll(val);
       }
       break;
 
@@ -697,20 +697,20 @@ static memcached_return_t binary_read_one_response(org::libmemcached::Instance* 
     case PROTOCOL_BINARY_CMD_SASL_STEP:
       {
         memcached_result_reset(result);
-        result->item_cas= header.response.cas;
+        result->impl()->item_cas= header.response.cas;
 
-        if (memcached_string_check(&result->value,
+        if (memcached_string_check(&result->impl()->value,
                                    bodylen) != MEMCACHED_SUCCESS)
           return MEMCACHED_MEMORY_ALLOCATION_FAILURE;
 
-        char *vptr= memcached_string_value_mutable(&result->value);
+        char *vptr= memcached_string_value_mutable(&result->impl()->value);
         if ((rc= memcached_safe_read(instance, vptr, bodylen)) != MEMCACHED_SUCCESS)
         {
           WATCHPOINT_ERROR(rc);
           return MEMCACHED_UNKNOWN_READ_FAILURE;
         }
 
-        memcached_string_set_length(&result->value, bodylen);
+        memcached_string_set_length(&result->impl()->value, bodylen);
       }
       break;
     default:

@@ -43,98 +43,59 @@
   to addjust the entire API.
 */
 #include <libmemcached/common.h>
-
-static inline void _result_init(memcached_result_st *self,
-                                memcached_st *memc)
-{
-  self->item_flags= 0;
-  self->item_expiration= 0;
-  self->key_length= 0;
-  self->item_cas= 0;
-  self->root= memc;
-  self->numeric_value= UINT64_MAX;
-  self->count= 0;
-  self->item_key[0]= 0;
-}
+#include <memory>
 
 memcached_result_st *memcached_result_create(const memcached_st *memc,
-                                             memcached_result_st *ptr)
+                                             memcached_result_st *result_shell)
 {
-  WATCHPOINT_ASSERT(memc);
-
-  /* Saving malloc calls :) */
-  if (ptr)
+  Result *result= new (std::nothrow) Result(result_shell, memc);
+  if (result)
   {
-    ptr->options.is_allocated= false;
+    return result->shell();
   }
-  else
-  {
-    ptr= libmemcached_xmalloc(memc, memcached_result_st);
 
-    if (not ptr)
+  return NULL;
+}
+
+void memcached_result_reset(memcached_result_st *result)
+{
+  result->impl()->key_length= 0;
+  memcached_string_reset(&result->impl()->value);
+  result->impl()->item_flags= 0;
+  result->impl()->item_cas= 0;
+  result->impl()->item_expiration= 0;
+  result->impl()->numeric_value= UINT64_MAX;
+}
+
+void memcached_result_free(memcached_result_st* result)
+{
+  if (result)
+  {
+    memcached_string_free(&result->impl()->value);
+
+    bool cleanup= memcached_is_allocated(result);
+    delete result->impl();
+
+    if (cleanup == false)
     {
-      return NULL;
+      memcached_set_initialized(result, false);
+      result->impl(NULL);
     }
-
-    ptr->options.is_allocated= true;
-  }
-
-  ptr->options.is_initialized= true;
-
-  _result_init(ptr, (memcached_st *)memc);
-
-  WATCHPOINT_SET(ptr->value.options.is_initialized= false);
-  memcached_string_create((memcached_st*)memc, &ptr->value, 0);
-  WATCHPOINT_ASSERT_INITIALIZED(&ptr->value);
-  WATCHPOINT_ASSERT(ptr->value.string == NULL);
-
-  return ptr;
-}
-
-void memcached_result_reset(memcached_result_st *ptr)
-{
-  ptr->key_length= 0;
-  memcached_string_reset(&ptr->value);
-  ptr->item_flags= 0;
-  ptr->item_cas= 0;
-  ptr->item_expiration= 0;
-  ptr->numeric_value= UINT64_MAX;
-}
-
-void memcached_result_free(memcached_result_st *ptr)
-{
-  if (ptr == NULL)
-  {
-    return;
-  }
-
-  memcached_string_free(&ptr->value);
-  ptr->numeric_value= UINT64_MAX;
-
-  if (memcached_is_allocated(ptr))
-  {
-    WATCHPOINT_ASSERT(ptr->root); // Without a root, that means that result was not properly initialized.
-    libmemcached_free(ptr->root, ptr);
-  }
-  else
-  {
-    ptr->count= 0;
-    ptr->options.is_initialized= false;
   }
 }
 
 void memcached_result_reset_value(memcached_result_st *ptr)
 {
-  memcached_string_reset(&ptr->value);
+  memcached_string_reset(&ptr->impl()->value);
 }
 
 memcached_return_t memcached_result_set_value(memcached_result_st *ptr,
                                               const char *value,
                                               size_t length)
 {
-  if (memcached_failed(memcached_string_append(&ptr->value, value, length)))
+  if (memcached_failed(memcached_string_append(&ptr->impl()->value, value, length)))
   {
-    return memcached_set_errno(*ptr->root, errno, MEMCACHED_AT);
+    return memcached_set_errno(*(ptr->impl())->root, errno, MEMCACHED_AT);
   }
 
   return MEMCACHED_SUCCESS;
@@ -142,48 +103,48 @@ memcached_return_t memcached_result_set_value(memcached_result_st *ptr,
 
 const char *memcached_result_key_value(const memcached_result_st *self)
 {
-  return self->key_length ? self->item_key : NULL;
+  return self->impl()->key_length ? self->impl()->item_key : NULL;
 }
 
 size_t memcached_result_key_length(const memcached_result_st *self)
 {
-  return self->key_length;
+  return self->impl()->key_length;
 }
 
 const char *memcached_result_value(const memcached_result_st *self)
 {
-  const memcached_string_st *sptr= &self->value;
+  const memcached_string_st *sptr= &self->impl()->value;
   return memcached_string_value(sptr);
 }
 
 size_t memcached_result_length(const memcached_result_st *self)
 {
-  const memcached_string_st *sptr= &self->value;
+  const memcached_string_st *sptr= &self->impl()->value;
   return memcached_string_length(sptr);
 }
 
 char *memcached_result_take_value(memcached_result_st *self)
 {
-  memcached_string_st *sptr= &self->value;
+  memcached_string_st *sptr= &self->impl()->value;
   return memcached_string_take_value(sptr);
 }
 
 uint32_t memcached_result_flags(const memcached_result_st *self)
 {
-  return self->item_flags;
+  return self->impl()->item_flags;
 }
 
 uint64_t memcached_result_cas(const memcached_result_st *self)
 {
-  return self->item_cas;
+  return self->impl()->item_cas;
 }
 
 void memcached_result_set_flags(memcached_result_st *self, uint32_t flags)
 {
-  self->item_flags= flags;
+  self->impl()->item_flags= flags;
 }
 
 void memcached_result_set_expiration(memcached_result_st *self, time_t expiration)
 {
-  self->item_expiration= expiration;
+  self->impl()->item_expiration= expiration;
 }

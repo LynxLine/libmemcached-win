@@ -36,4 +36,65 @@
  */
 
 #pragma once
+
+#include "libmemcached/string.hpp"
+
+struct Result {
+  struct {
+    bool is_allocated;
+    bool is_initialized;
+  } options;
+  uint32_t item_flags;
+  time_t item_expiration;
+  size_t key_length;
+  uint64_t item_cas;
+  struct memcached_st *root;
+  memcached_string_st value;
+  uint64_t numeric_value;
+  uint64_t count;
+  char item_key[MEMCACHED_MAX_KEY];
+  /* Add result callback function */
+
+  Result(memcached_result_st* shell_, const struct memcached_st* memc_) :
+    item_flags(0),
+    item_expiration(0),
+    key_length(0),
+    item_cas(0),
+    root(const_cast<memcached_st*>(memc_)),
+    numeric_value(UINT64_MAX),
+    count(0),
+    _shell(shell_)
+  {
+    item_key[0]= 0;
+
+    if (shell_)
+    {
+      memcached_set_allocated(_shell, false);
+    }
+    else
+    {
+      _shell= &_owned_shell;
+      memcached_set_allocated(_shell, true);
+    }
+
+    _shell->impl(this);
+    memcached_set_initialized(_shell, true);
+
+    memcached_string_create((memcached_st*)root, &value, 0);
+  }
+
+  ~Result()
+  {
+  }
+
+  memcached_result_st* shell()
+  {
+    return _shell;
+  }
+
+private:
+  memcached_result_st* _shell;
+  memcached_result_st _owned_shell;
+};
+
 void memcached_result_reset_value(memcached_result_st *ptr);
