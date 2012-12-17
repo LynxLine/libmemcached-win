@@ -2672,7 +2672,6 @@ test_return_t user_supplied_bug20(memcached_st *memc)
   memcached_result_st *result= memcached_result_create(memc, &result_obj);
   test_true(result);
 
-  memcached_result_create(memc, &result_obj);
   memcached_return_t status;
   result= memcached_fetch_result(memc, &result_obj, &status);
 
