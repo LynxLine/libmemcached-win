@@ -73,14 +73,13 @@ void memcached_result_free(memcached_result_st* result)
   {
     memcached_string_free(&result->impl()->value);
 
-    if (memcached_is_allocated(result))
+    bool cleanup= memcached_is_allocated(result);
+    delete result->impl();
+
+    if (cleanup == false)
     {
-      delete result->impl();
-    }
-    else
-    {
-      result->impl()->count= 0;
       memcached_set_initialized(result, false);
+      result->impl(NULL);
     }
   }
 }
