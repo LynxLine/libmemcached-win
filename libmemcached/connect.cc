@@ -68,7 +68,8 @@ static memcached_return_t connect_poll(org::libmemcached::Instance* server)
 {
   struct pollfd fds[1];
   fds[0].fd= server->fd;
-  fds[0].events= POLLOUT;
+  fds[0].events= server->events();
+  fds[0].revents= 0;
 
   size_t loop_max= 5;
 
@@ -129,6 +130,10 @@ static memcached_return_t connect_poll(org::libmemcached::Instance* server)
       server->io_wait_count.timeouts++;
       return memcached_set_error(*server, MEMCACHED_TIMEOUT, MEMCACHED_AT);
     }
+
+#if 0
+    server->revents(fds[0].revents);
+#endif
 
     if (fds[0].revents & POLLERR or
         fds[0].revents & POLLHUP or 
@@ -358,7 +363,7 @@ static bool set_socket_options(org::libmemcached::Instance* server)
 #endif
 
 
-#if defined(__MACH__) && defined(__APPLE__) || defined(__FreeBSD__)
+#if defined(SO_NOSIGPIPE)
   if (SO_NOSIGPIPE)
   {
     int set= 1;
@@ -449,49 +454,56 @@ static memcached_return_t unix_socket_connect(org::libmemcached::Instance* serve
 #ifndef WIN32
   WATCHPOINT_ASSERT(server->fd == INVALID_SOCKET);
 
-  int type= SOCK_STREAM;
-  if (SOCK_CLOEXEC)
-  {
-    type|= SOCK_CLOEXEC;
-  }
-
-  if (SOCK_NONBLOCK)
-  {
-    type|= SOCK_NONBLOCK;
-  }
-
-  if ((server->fd= socket(AF_UNIX, type, 0)) < 0)
-  {
-    memcached_set_errno(*server, errno, NULL);
-    return MEMCACHED_CONNECTION_FAILURE;
-  }
-
-  struct sockaddr_un servAddr;
-
-  memset(&servAddr, 0, sizeof (struct sockaddr_un));
-  servAddr.sun_family= AF_UNIX;
-  strncpy(servAddr.sun_path, server->hostname, sizeof(servAddr.sun_path)); /* Copy filename */
-
   do {
+    int type= SOCK_STREAM;
+    if (SOCK_CLOEXEC)
+    {
+      type|= SOCK_CLOEXEC;
+    }
+
+    if (SOCK_NONBLOCK)
+    {
+      type|= SOCK_NONBLOCK;
+    }
+
+    if ((server->fd= socket(AF_UNIX, type, 0)) < 0)
+    {
+      return memcached_set_errno(*server, errno, NULL);
+    }
+
+    struct sockaddr_un servAddr;
+
+    memset(&servAddr, 0, sizeof (struct sockaddr_un));
+    servAddr.sun_family= AF_UNIX;
+    strncpy(servAddr.sun_path, server->hostname, sizeof(servAddr.sun_path)); /* Copy filename */
+
     if (connect(server->fd, (struct sockaddr *)&servAddr, sizeof(servAddr)) < 0)
     {
       switch (errno)
       {
       case EINPROGRESS:
       case EALREADY:
+        server->events(POLLOUT);
+        break;
+
       case EINTR:
+        (void)closesocket(server->fd);
+        server->fd= INVALID_SOCKET;
         continue;
 
       case EISCONN: /* We were spinning waiting on connect */
         {
           assert(0); // Programmer error
-          break;
+          (void)closesocket(server->fd);
+          server->fd= INVALID_SOCKET;
+          continue;
         }
 
       default:
         WATCHPOINT_ERRNO(errno);
-        memcached_set_errno(*server, errno, MEMCACHED_AT);
-        return MEMCACHED_CONNECTION_FAILURE;
+        (void)closesocket(server->fd);
+        server->fd= INVALID_SOCKET;
+        return memcached_set_errno(*server, errno, MEMCACHED_AT);
       }
     }
   } while (0);
@@ -591,6 +603,7 @@ static memcached_return_t network_connect(org::libmemcached::Instance* server)
     case EINPROGRESS: // nonblocking mode - first return
     case EALREADY: // nonblocking mode - subsequent returns
       {
+        server->events(POLLOUT);
         server->state= MEMCACHED_SERVER_STATE_IN_PROGRESS;
         memcached_return_t rc= connect_poll(server);
 
@@ -617,6 +630,9 @@ static memcached_return_t network_connect(org::libmemcached::Instance* server)
       (void)closesocket(server->fd);
       server->fd= INVALID_SOCKET;
       continue;
+
+    case ECONNREFUSED:
+      // Probably not running service
 
     default:
       break;
@@ -815,16 +831,6 @@ static memcached_return_t _memcached_connect(org::libmemcached::Instance* server
   }
 
   return rc;
-}
-
-memcached_return_t memcached_connect_try(org::libmemcached::Instance* server)
-{
-  if (server and server->root and server->root->state.is_parsing)
-  {
-    return MEMCACHED_SUCCESS;
-  }
-
-  return _memcached_connect(server, false);
 }
 
 memcached_return_t memcached_connect(org::libmemcached::Instance* server)
