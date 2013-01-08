@@ -37,19 +37,25 @@
 #pragma once
 
 #ifdef __cplusplus
+# include <cstdarg>
 # include <cstddef>
+# include <cstdio>
 # include <cstdlib>
 # include <cstring>
-#include <cstdarg>
 #else
-# include <stddef.h>
-# include <stdlib.h>
-# include <stdbool.h>
-# include <string.h>
 # include <stdarg.h>
+# include <stdbool.h>
+# include <stddef.h>
+# include <stdio.h>
+# include <stdlib.h>
+# include <string.h>
 #endif
 
-#include <alloca.h>
+#ifdef _WIN32
+# include <malloc.h>
+#else
+# include <alloca.h>
+#endif
 
 #ifndef __PRETTY_FUNCTION__
 # define __PRETTY_FUNCTION__ __func__
@@ -64,7 +70,11 @@
 #endif
 
 #ifndef FAIL
-# define FAIL(__message_format, ...) 
+# define FAIL(__message_format, ...)
+#endif
+
+#ifndef SKIP
+# define SKIP(__message_format, ...)
 #endif
 
 static inline bool valgrind_is_caller(void)
@@ -114,7 +124,26 @@ static inline int yatl_strcmp(const char *s1, const char *s2, size_t *s1_length,
 do \
 { \
   if ((__expression)) { \
-    fprintf(stderr, "\n%s:%d: %s SKIP '!%s'\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #__expression); \
+    if (YATL_FULL) { \
+      SKIP(#__expression); \
+    } \
+    fprintf(stdout, "\n%s:%d: %s SKIP '!(%s)'\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #__expression); \
+    exit(EXIT_SKIP); \
+  } \
+} while (0)
+
+#define SKIP_IF_(__expression, ...) \
+do \
+{ \
+  if ((__expression)) { \
+    size_t ask= snprintf(0, 0, __VA_ARGS__); \
+    ask++; \
+    char *buffer= (char*)alloca(sizeof(char) * ask); \
+    snprintf(buffer, ask, __VA_ARGS__); \
+    if (YATL_FULL) { \
+      SKIP(#__expression, buffer); \
+    } \
+    fprintf(stdout, "\n%s:%d: %s SKIP '%s' [ %s ]\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #__expression, buffer); \
     exit(EXIT_SKIP); \
   } \
 } while (0)
@@ -149,10 +178,12 @@ do \
   if ((__expression) != NULL) { \
     size_t ask= snprintf(0, 0, __VA_ARGS__); \
     ask++; \
-    char *buffer= (char*)malloc(sizeof(char) * ask); \
+    char *buffer= (char*)alloca(sizeof(char) * ask); \
     snprintf(buffer, ask, __VA_ARGS__); \
+    if (YATL_FULL) { \
+      FAIL("Assertion '%s' != NULL [ %s ]", #__expression, buffer);\
+    } \
     fprintf(stderr, "\n%s:%d: %s Assertion '%s' != NULL [ %s ]\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #__expression, buffer);\
-    free(buffer); \
     exit(EXIT_FAILURE); \
   } \
 } while (0)
@@ -161,6 +192,9 @@ do \
 do \
 { \
   if ((__expression) == NULL) { \
+    if (YATL_FULL) { \
+      FAIL("Assertion '%s' == NULL", #__expression,);\
+    } \
     fprintf(stderr, "\n%s:%d: %s Assertion '%s' == NULL\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #__expression,);\
     exit(EXIT_FAILURE); \
   } \
@@ -172,25 +206,13 @@ do \
   if ((__expression) == NULL) { \
     size_t ask= snprintf(0, 0, __VA_ARGS__); \
     ask++; \
-    char *buffer= (char*)malloc(sizeof(char) * ask); \
+    char *buffer= (char*)alloca(sizeof(char) * ask); \
     snprintf(buffer, ask, __VA_ARGS__); \
+    if (YATL_FULL) { \
+      FAIL("Assertion '%s' == NULL [ %s ]", #__expression, buffer);\
+    } \
     fprintf(stderr, "\n%s:%d: %s Assertion '%s' == NULL [ %s ]\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #__expression, buffer);\
-    free(buffer); \
     exit(EXIT_FAILURE); \
-  } \
-} while (0)
-
-#define SKIP_IF_(__expression, ...) \
-do \
-{ \
-  if ((__expression)) { \
-    size_t ask= snprintf(0, 0, __VA_ARGS__); \
-    ask++; \
-    char *buffer= (char*)malloc(sizeof(char) * ask); \
-    snprintf(buffer, ask, __VA_ARGS__); \
-    fprintf(stdout, "\n%s:%d: %s SKIP '%s' [ %s ]\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #__expression, buffer); \
-    free(buffer); \
-    exit(EXIT_SKIP); \
   } \
 } while (0)
 
@@ -200,10 +222,12 @@ do \
   if (! (__expression)) { \
     size_t ask= snprintf(0, 0, __VA_ARGS__); \
     ask++; \
-    char *buffer= (char*)malloc(sizeof(char) * ask); \
+    char *buffer= (char*)alloca(sizeof(char) * ask); \
     snprintf(buffer, ask, __VA_ARGS__); \
+    if (YATL_FULL) { \
+      FAIL("Assertion '%s' [ %s ]", #__expression, buffer); \
+    } \
     fprintf(stderr, "\n%s:%d: %s Assertion '%s' [ %s ]\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #__expression, buffer); \
-    free(buffer); \
     exit(EXIT_FAILURE); \
   } \
 } while (0)
@@ -212,6 +236,9 @@ do \
 do \
 { \
   if ((__expected) != (__actual)) { \
+    if (YATL_FULL) { \
+      FAIL("Assertion '%s' != '%s'", #__expected, #__actual); \
+    } \
     fprintf(stderr, "\n%s:%d: %s Assertion '%s' != '%s'\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #__expected, #__actual); \
     exit(EXIT_FAILURE); \
   } \
@@ -223,10 +250,12 @@ do \
   if ((__expected) != (__actual)) { \
     size_t ask= snprintf(0, 0, __VA_ARGS__); \
     ask++; \
-    char *buffer= (char*)malloc(sizeof(char) * ask); \
+    char *buffer= (char*)alloca(sizeof(char) * ask); \
     snprintf(buffer, ask, __VA_ARGS__); \
+    if (YATL_FULL) { \
+      FAIL("Assertion '%s' != '%s' [ %s ]", #__expected, #__actual, buffer); \
+    } \
     fprintf(stderr, "\n%s:%d: %s Assertion '%s' != '%s' [ %s ]\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #__expected, #__actual, buffer); \
-    free(buffer); \
     exit(EXIT_FAILURE); \
   } \
 } while (0)
@@ -238,6 +267,11 @@ do \
   size_t __actual_length; \
   int ret= yatl_strcmp(__expected_str, __actual_str, &__expected_length, &__actual_length); \
   if (ret) { \
+    if (YATL_FULL) { \
+      FAIL("Assertion '%.*s' != '%.*s'\n", \
+           (int)(__expected_length), (__expected_str), \
+           (int)__actual_length, (__actual_str)) ; \
+    } \
     fprintf(stderr, "\n%s:%d: %s Assertion '%.*s' != '%.*s'\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, \
             (int)(__expected_length), (__expected_str), \
             (int)__actual_length, (__actual_str)) ; \
@@ -254,13 +288,18 @@ do \
   if (ret) { \
     size_t ask= snprintf(0, 0, __VA_ARGS__); \
     ask++; \
-    char *buffer= (char*)malloc(sizeof(char) * ask); \
+    char *buffer= (char*)alloca(sizeof(char) * ask); \
     ask= snprintf(buffer, ask, __VA_ARGS__); \
+    if (YATL_FULL) { \
+      FAIL("Assertion '%.*s' != '%.*s' [ %.*s ]", \
+           (int)(__expected_length), (__expected_str), \
+           (int)(__actual_length), (__actual_str), \
+           (int)(ask), buffer); \
+    } \
     fprintf(stderr, "\n%s:%d: %s Assertion '%.*s' != '%.*s' [ %.*s ]\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, \
             (int)(__expected_length), (__expected_str), \
             (int)(__actual_length), (__actual_str), \
             (int)(ask), buffer); \
-    free(buffer); \
     exit(EXIT_FAILURE); \
   } \
 } while (0)
@@ -272,6 +311,11 @@ do \
   size_t __actual_length; \
   int ret= yatl_strcmp(__expected_str, __actual_str, &__expected_length, &__actual_length); \
   if (ret == 0) { \
+    if (YATL_FULL) { \
+      FAIL("Assertion '%.*s' == '%.*s'", \
+           (int)(__expected_length), (__expected_str), \
+           (int)__actual_length, (__actual_str)) ; \
+    } \
     fprintf(stderr, "\n%s:%d: %s Assertion '%.*s' == '%.*s'\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, \
             (int)(__expected_length), (__expected_str), \
             (int)__actual_length, (__actual_str)) ; \
@@ -288,13 +332,18 @@ do \
   if (ret == 0) { \
     size_t ask= snprintf(0, 0, __VA_ARGS__); \
     ask++; \
-    char *buffer= (char*)malloc(sizeof(char) * ask); \
+    char *buffer= (char*)alloca(sizeof(char) * ask); \
     ask= snprintf(buffer, ask, __VA_ARGS__); \
+    if (YATL_FULL) { \
+      FAIL("Assertion '%.*s' == '%.*s' [ %.*s ]", \
+           (int)(__expected_length), (__expected_str), \
+           (int)(__actual_length), (__actual_str), \
+           (int)(ask), buffer); \
+    } \
     fprintf(stderr, "\n%s:%d: %s Assertion '%.*s' == '%.*s' [ %.*s ]\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, \
             (int)(__expected_length), (__expected_str), \
             (int)(__actual_length), (__actual_str), \
             (int)(ask), buffer); \
-    free(buffer); \
     exit(EXIT_FAILURE); \
   } \
 } while (0)
@@ -303,6 +352,9 @@ do \
 do \
 { \
   if ((__expected) == (__actual)) { \
+    if (YATL_FULL) { \
+      FAIL("Assertion '%s' == '%s'", #__expected, #__actual); \
+    } \
     fprintf(stderr, "\n%s:%d: %s Assertion '%s' == '%s'\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #__expected, #__actual); \
     exit(EXIT_FAILURE); \
   } \
@@ -314,10 +366,12 @@ do \
   if ((__expected) == (__actual)) { \
     size_t ask= snprintf(0, 0, __VA_ARGS__); \
     ask++; \
-    char *buffer= (char*)malloc(sizeof(char) * ask); \
+    char *buffer= (char*)alloca(sizeof(char) * ask); \
     snprintf(buffer, ask, __VA_ARGS__); \
+    if (YATL_FULL) { \
+      FAIL("Assertion '%s' == '%s' [ %s ]", #__expected, #__actual, buffer); \
+    } \
     fprintf(stderr, "\n%s:%d: %s Assertion '%s' == '%s' [ %s ]\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #__expected, #__actual, buffer); \
-    free(buffer); \
     exit(EXIT_FAILURE); \
   } \
 } while (0)
@@ -331,7 +385,7 @@ do \
     char *buffer= (char*)alloca(sizeof(char) * ask); \
     snprintf(buffer, ask, __VA_ARGS__); \
     if (YATL_FULL) { \
-      throw libtest::__failure(__FILE__, __LINE__, __PRETTY_FUNCTION__, "Assertion '!%s' [ %s ]", #__expression, buffer); \
+      FAIL("Assertion '!%s' [ %s ]", #__expression, buffer); \
     } \
     fprintf(stderr, "\n%s:%d: %s Assertion '!%s' [ %s ]\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #__expression, buffer); \
     exit(EXIT_FAILURE); \
