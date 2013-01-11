@@ -32,8 +32,6 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Summary: connects to a host, and then flushes it (memcached_flush(3)).
- *
  */
 
 #pragma once
@@ -47,4 +45,3 @@
 #include <libmemcachedutil-1.2/util.h>
 
 #include <libmemcached/assert.hpp>
-#include <libmemcached/backtrace.hpp>
