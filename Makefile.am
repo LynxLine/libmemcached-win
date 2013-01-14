@@ -41,7 +41,7 @@ if BUILD_WIN32
 include libhashkit-1.0/include.am
 include libhashkit/include.am
 include libmemcached/include.am
-include libmemcached-1.0/include.am
+include libmemcached-1.2/include.am
 else
 
 include libtest/include.am

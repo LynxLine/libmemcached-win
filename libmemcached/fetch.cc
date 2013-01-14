@@ -37,11 +37,12 @@
 
 #include <libmemcached/common.h>
 
-char *memcached_fetch(memcached_st *memc, char *key, size_t *key_length, 
+char *memcached_fetch(memcached_st *shell, char *key, size_t *key_length, 
                       size_t *value_length, 
                       uint32_t *flags,
                       memcached_return_t *error)
 {
+  Memcached* memc= memcached2Memcached(shell);
   memcached_return_t unused;
   if (error == NULL)
   {
@@ -252,11 +253,12 @@ memcached_result_st *memcached_fetch_result(memcached_st *memc,
   return NULL;
 }
 
-memcached_return_t memcached_fetch_execute(memcached_st *memc, 
+memcached_return_t memcached_fetch_execute(memcached_st *shell, 
                                            memcached_execute_fn *callback,
                                            void *context,
                                            uint32_t number_of_callbacks)
 {
+  Memcached* memc= memcached2Memcached(shell);
   memcached_result_st *result= &memc->result;
   memcached_return_t rc;
   bool some_errors= false;

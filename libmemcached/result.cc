@@ -2,7 +2,7 @@
  * 
  *  Libmemcached library
  *
- *  Copyright (C) 2011 Data Differential, http://datadifferential.com/
+ *  Copyright (C) 2011-2013 Data Differential, http://datadifferential.com/
  *  Copyright (C) 2006-2009 Brian Aker All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -45,9 +45,10 @@
 #include <libmemcached/common.h>
 #include <memory>
 
-memcached_result_st *memcached_result_create(const memcached_st *memc,
+memcached_result_st *memcached_result_create(const memcached_st *shell,
                                              memcached_result_st *result_shell)
 {
+  const Memcached* memc= memcached2Memcached(shell);
   Result *result= new (std::nothrow) Result(result_shell, memc);
   if (result)
   {
