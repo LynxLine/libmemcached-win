@@ -6,6 +6,7 @@ ACLOCAL_AMFLAGS = -I m4 -I libtest/m4
 SUFFIXES =
 .PHONY =
 TESTS =
+XFAIL_TESTS =
 CLEANFILES =
 DISTCLEANFILES =
 bin_PROGRAMS =
@@ -35,6 +36,14 @@ EXTRA_DIST+= README.win32
 aclocaldir= $(datadir)/aclocal
 dist_aclocal_DATA=
 
+# Build targets for Windows
+if BUILD_WIN32
+include libhashkit-1.0/include.am
+include libhashkit/include.am
+include libmemcached/include.am
+include libmemcached-1.2/include.am
+else
+
 include libtest/include.am
 
 include libhashkit-1.0/include.am
@@ -56,8 +65,11 @@ include util/include.am
 include win32/include.am
 
 include m4/include.am
+endif
 
+TESTS += ${bin_PROGRAMS}
 TESTS += ${check_PROGRAMS}
+XFAIL_TESTS += ${bin_PROGRAMS}
 
 merge-clean:
 	@find ./ | $(GREP) \.gcda | xargs rm -f

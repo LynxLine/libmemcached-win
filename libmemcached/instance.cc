@@ -37,7 +37,7 @@
 
 #include <libmemcached/common.h>
 
-static inline void _server_init(org::libmemcached::Instance* self, memcached_st *root,
+static inline void _server_init(org::libmemcached::Instance* self, Memcached *root,
                                 const memcached_string_t& hostname,
                                 in_port_t port,
                                 uint32_t weight, memcached_connection_t type)
@@ -195,11 +195,12 @@ void memcached_instance_free(org::libmemcached::Instance* self)
   }
 }
 
-memcached_return_t memcached_server_cursor(const memcached_st* memc,
+memcached_return_t memcached_server_cursor(const memcached_st* shell,
                                            const memcached_server_fn *callback,
                                            void *context,
                                            uint32_t number_of_callbacks)
 {
+  const Memcached* memc= memcached2Memcached(shell);
   memcached_return_t rc;
   if (memcached_failed(rc= initialize_const_query(memc)))
   {
@@ -255,11 +256,12 @@ memcached_return_t memcached_server_execute(memcached_st *memc,
   return MEMCACHED_SUCCESS;
 }
 
-memcached_server_instance_st memcached_server_by_key(memcached_st *memc,
+memcached_server_instance_st memcached_server_by_key(memcached_st *shell,
                                                      const char *key,
                                                      size_t key_length,
                                                      memcached_return_t *error)
 {
+  Memcached* memc= memcached2Memcached(shell);
   memcached_return_t unused;
   if (error == NULL)
   {
@@ -328,15 +330,15 @@ void set_last_disconnected_host(org::libmemcached::Instance* self)
   }
 }
 
-memcached_server_instance_st memcached_server_get_last_disconnect(const memcached_st *self)
+memcached_server_instance_st memcached_server_get_last_disconnect(const memcached_st *shell)
 {
-  WATCHPOINT_ASSERT(self);
-  if (self == NULL)
+  const Memcached* self= memcached2Memcached(shell);
+  if (self)
   {
-    return 0;
+    return (memcached_server_instance_st)self->last_disconnected_server;
   }
 
-  return (memcached_server_instance_st)self->last_disconnected_server;
+  return 0;
 }
 
 void memcached_instance_next_retry(memcached_server_instance_st self, const time_t absolute_time)
@@ -347,3 +349,24 @@ void memcached_instance_next_retry(memcached_server_instance_st self, const time
     ((org::libmemcached::Instance*)self)->next_retry= absolute_time;
   }
 }
+
+namespace org {
+namespace libmemcached {
+
+  bool Instance::valid() const
+  {
+    if (fd == INVALID_SOCKET)
+    {
+      return false;
+    }
+
+    return true;
+  }
+
+  bool Instance::is_shutting_down() const
+  {
+    return options.is_shutting_down;
+  }
+
+} // namespace libmemcached
+} // namespace org

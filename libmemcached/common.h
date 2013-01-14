@@ -107,9 +107,14 @@
 # include <dlfcn.h>
 #endif
 
+#if defined(WIN32) || defined(__MINGW32__)
+# include "libmemcached/windows.hpp"
+#endif
+
 #include <libmemcached-1.2/memcached.h>
 #include <libmemcached/watchpoint.h>
 #include <libmemcached/is.h>
+typedef struct memcached_st Memcached;
 
 #ifdef __cplusplus
 # include "libmemcached/instance.hpp"
