@@ -191,13 +191,13 @@ public:
     return true;
   }
 
-  bool build(size_t argc, const char *argv[]);
+  bool build();
 };
 
 
 #include <sstream>
 
-bool Memcached::build(size_t argc, const char *argv[])
+bool Memcached::build()
 {
   if (getuid() == 0 or geteuid() == 0)
   {
@@ -205,7 +205,8 @@ bool Memcached::build(size_t argc, const char *argv[])
   }
 
   add_option("-l", "localhost");
-#ifndef TARGET_OS_OSX
+#ifdef __APPLE__
+#else
   add_option("-m", "128");
   add_option("-M");
 #endif
@@ -213,16 +214,6 @@ bool Memcached::build(size_t argc, const char *argv[])
   if (sasl())
   {
     add_option(sasl());
-  }
-
-  for (size_t x= 0 ; x < argc ; x++)
-  {
-    if (argv[x] == NULL)
-    {
-      break;
-    }
-
-    add_option(argv[x]);
   }
 
   return true;
