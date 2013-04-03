@@ -38,7 +38,7 @@
 #include <libmemcached/common.h>
 #include <libmemcached/string.hpp>
 
-static memcached_return_t textual_value_fetch(org::libmemcached::Instance* instance,
+static memcached_return_t textual_value_fetch(memcached_instance_st* instance,
                                               char *buffer,
                                               memcached_result_st *result)
 {
@@ -90,9 +90,11 @@ static memcached_return_t textual_value_fetch(org::libmemcached::Instance* insta
   }
 
   for (next_ptr= string_ptr; isdigit(*string_ptr); string_ptr++) {};
+
+  errno= 0;
   result->impl()->item_flags= (uint32_t) strtoul(next_ptr, &string_ptr, 10);
 
-  if (end_ptr == string_ptr)
+  if (errno != 0 or end_ptr == string_ptr)
   {
     goto read_error;
   }
@@ -105,9 +107,10 @@ static memcached_return_t textual_value_fetch(org::libmemcached::Instance* insta
   }
 
   for (next_ptr= string_ptr; isdigit(*string_ptr); string_ptr++) {};
+  errno= 0;
   value_length= (size_t)strtoull(next_ptr, &string_ptr, 10);
 
-  if (end_ptr == string_ptr)
+  if (errno != 0 or end_ptr == string_ptr)
   {
     goto read_error;
   }
@@ -121,11 +124,14 @@ static memcached_return_t textual_value_fetch(org::libmemcached::Instance* insta
   else
   {
     string_ptr++;
+
     for (next_ptr= string_ptr; isdigit(*string_ptr); string_ptr++) {};
+
+    errno= 0;
     result->impl()->item_cas= strtoull(next_ptr, &string_ptr, 10);
   }
 
-  if (end_ptr < string_ptr)
+  if (errno != 0 or end_ptr < string_ptr)
   {
     goto read_error;
   }
@@ -207,7 +213,7 @@ read_error:
   return MEMCACHED_PARTIAL_READ;
 }
 
-static memcached_return_t textual_read_one_response(org::libmemcached::Instance* instance,
+static memcached_return_t textual_read_one_response(memcached_instance_st* instance,
                                                     char *buffer, const size_t buffer_length,
                                                     memcached_result_st *result)
 {
@@ -238,8 +244,9 @@ static memcached_return_t textual_read_one_response(org::libmemcached::Instance*
         char *response_ptr= index(buffer, ' ');
 
         char *endptr;
+        errno= 0;
         long int version= strtol(response_ptr, &endptr, 10);
-        if (version == LONG_MIN or version == LONG_MAX or errno == EINVAL or version > UINT8_MAX or version == 0)
+        if (errno != 0 or version == LONG_MIN or version == LONG_MAX or version > UINT8_MAX or version == 0)
         {
           instance->major_version= instance->minor_version= instance->micro_version= UINT8_MAX;
           return memcached_set_error(*instance, MEMCACHED_UNKNOWN_READ_FAILURE, MEMCACHED_AT, memcached_literal_param("strtol() failed to parse major version"));
@@ -247,8 +254,9 @@ static memcached_return_t textual_read_one_response(org::libmemcached::Instance*
         instance->major_version= uint8_t(version);
 
         endptr++;
+        errno= 0;
         version= strtol(endptr, &endptr, 10);
-        if (version == LONG_MIN or version == LONG_MAX or errno == EINVAL or version > UINT8_MAX)
+        if (errno != 0 or version == LONG_MIN or version == LONG_MAX or version > UINT8_MAX)
         {
           instance->major_version= instance->minor_version= instance->micro_version= UINT8_MAX;
           return memcached_set_error(*instance, MEMCACHED_UNKNOWN_READ_FAILURE, MEMCACHED_AT, memcached_literal_param("strtol() failed to parse minor version"));
@@ -256,8 +264,9 @@ static memcached_return_t textual_read_one_response(org::libmemcached::Instance*
         instance->minor_version= uint8_t(version);
 
         endptr++;
+        errno= 0;
         version= strtol(endptr, &endptr, 10);
-        if (version == LONG_MIN or version == LONG_MAX or errno == EINVAL or version > UINT8_MAX)
+        if (errno != 0 or version == LONG_MIN or version == LONG_MAX or version > UINT8_MAX)
         {
           instance->major_version= instance->minor_version= instance->micro_version= UINT8_MAX;
           return memcached_set_error(*instance, MEMCACHED_UNKNOWN_READ_FAILURE, MEMCACHED_AT, memcached_literal_param("strtol() failed to parse micro version"));
@@ -442,6 +451,7 @@ static memcached_return_t textual_read_one_response(org::libmemcached::Instance*
   case '8': /* INCR/DECR response */
   case '9': /* INCR/DECR response */
     {
+      errno= 0;
       unsigned long long int auto_return_value= strtoull(buffer, (char **)NULL, 10);
 
       if (auto_return_value == ULLONG_MAX and errno == ERANGE)
@@ -451,6 +461,12 @@ static memcached_return_t textual_read_one_response(org::libmemcached::Instance*
                                    memcached_literal_param("Numeric response was out of range"));
       }
       else if (errno == EINVAL)
+      {
+        result->impl()->numeric_value= UINT64_MAX;
+        return memcached_set_error(*instance, MEMCACHED_UNKNOWN_READ_FAILURE, MEMCACHED_AT,
+                                   memcached_literal_param("Numeric response was out of range"));
+      }
+      else if (errno != 0)
       {
         result->impl()->numeric_value= UINT64_MAX;
         return memcached_set_error(*instance, MEMCACHED_UNKNOWN_READ_FAILURE, MEMCACHED_AT,
@@ -480,7 +496,7 @@ static memcached_return_t textual_read_one_response(org::libmemcached::Instance*
                              buffer, total_read);
 }
 
-static memcached_return_t binary_read_one_response(org::libmemcached::Instance* instance,
+static memcached_return_t binary_read_one_response(memcached_instance_st* instance,
                                                    char *buffer, const size_t buffer_length,
                                                    memcached_result_st *result)
 {
@@ -620,8 +636,9 @@ static memcached_return_t binary_read_one_response(org::libmemcached::Instance* 
         }
 
         char *endptr;
+        errno= 0;
         long int version= strtol(version_buffer, &endptr, 10);
-        if (version == LONG_MIN or version == LONG_MAX or errno == EINVAL or version > UINT8_MAX or version == 0)
+        if (errno != 0 or version == LONG_MIN or version == LONG_MAX or version > UINT8_MAX or version == 0)
         {
           instance->major_version= instance->minor_version= instance->micro_version= UINT8_MAX;
           return memcached_set_error(*instance, MEMCACHED_UNKNOWN_READ_FAILURE, MEMCACHED_AT, memcached_literal_param("strtol() failed to parse major version"));
@@ -629,8 +646,9 @@ static memcached_return_t binary_read_one_response(org::libmemcached::Instance* 
         instance->major_version= uint8_t(version);
 
         endptr++;
+        errno= 0;
         version= strtol(endptr, &endptr, 10);
-        if (version == LONG_MIN or version == LONG_MAX or errno == EINVAL or version > UINT8_MAX)
+        if (errno != 0 or version == LONG_MIN or version == LONG_MAX or version > UINT8_MAX)
         {
           instance->major_version= instance->minor_version= instance->micro_version= UINT8_MAX;
           return memcached_set_error(*instance, MEMCACHED_UNKNOWN_READ_FAILURE, MEMCACHED_AT, memcached_literal_param("strtol() failed to parse minor version"));
@@ -638,8 +656,9 @@ static memcached_return_t binary_read_one_response(org::libmemcached::Instance* 
         instance->minor_version= uint8_t(version);
 
         endptr++;
+        errno= 0;
         version= strtol(endptr, &endptr, 10);
-        if (version == LONG_MIN or version == LONG_MAX or errno == EINVAL or version > UINT8_MAX)
+        if (errno != 0 or version == LONG_MIN or version == LONG_MAX or version > UINT8_MAX)
         {
           instance->major_version= instance->minor_version= instance->micro_version= UINT8_MAX;
           return memcached_set_error(*instance, MEMCACHED_UNKNOWN_READ_FAILURE, MEMCACHED_AT, memcached_literal_param("strtol() failed to parse micro version"));
@@ -647,6 +666,25 @@ static memcached_return_t binary_read_one_response(org::libmemcached::Instance* 
         instance->micro_version= uint8_t(version);
       }
       break;
+
+    case PROTOCOL_BINARY_CMD_TOUCH:
+      {
+        rc= MEMCACHED_SUCCESS;
+        if (bodylen == 4) // The four byte read is a bug?
+        {
+          char touch_buffer[4]; // @todo document this number
+          rc= memcached_safe_read(instance, touch_buffer, sizeof(touch_buffer));
+#if 0
+          fprintf(stderr, "%s:%d %d %d %d %d %.*s(%d)\n", __FILE__, __LINE__,
+                  int(touch_buffer[0]),
+                  int(touch_buffer[1]),
+                  int(touch_buffer[2]),
+                  int(touch_buffer[3]),
+                  int(bodylen), touch_buffer, int(bodylen));
+#endif
+        }
+        return memcached_set_error(*instance, rc, MEMCACHED_AT);
+      }
 
     case PROTOCOL_BINARY_CMD_FLUSH:
     case PROTOCOL_BINARY_CMD_QUIT:
@@ -656,13 +694,8 @@ static memcached_return_t binary_read_one_response(org::libmemcached::Instance* 
     case PROTOCOL_BINARY_CMD_APPEND:
     case PROTOCOL_BINARY_CMD_PREPEND:
     case PROTOCOL_BINARY_CMD_DELETE:
-    case PROTOCOL_BINARY_CMD_TOUCH:
       {
-        if (bodylen != 0)
-        {
-          char touch_buffer[32]; // @todo document this number
-          rc= memcached_safe_read(instance, buffer, sizeof(touch_buffer));
-        }
+        WATCHPOINT_ASSERT(bodylen == 0);
         return MEMCACHED_SUCCESS;
       }
 
@@ -801,7 +834,7 @@ static memcached_return_t binary_read_one_response(org::libmemcached::Instance* 
   return rc;
 }
 
-static memcached_return_t _read_one_response(org::libmemcached::Instance* instance,
+static memcached_return_t _read_one_response(memcached_instance_st* instance,
                                              char *buffer, const size_t buffer_length,
                                              memcached_result_st *result)
 {
@@ -831,7 +864,7 @@ static memcached_return_t _read_one_response(org::libmemcached::Instance* instan
   return rc;
 }
 
-memcached_return_t memcached_read_one_response(org::libmemcached::Instance* instance,
+memcached_return_t memcached_read_one_response(memcached_instance_st* instance,
                                                memcached_result_st *result)
 {
   char buffer[SMALL_STRING_LEN];
@@ -845,7 +878,7 @@ memcached_return_t memcached_read_one_response(org::libmemcached::Instance* inst
   return _read_one_response(instance, buffer, sizeof(buffer), result);
 }
 
-memcached_return_t memcached_response(org::libmemcached::Instance* instance,
+memcached_return_t memcached_response(memcached_instance_st* instance,
                                       memcached_result_st *result)
 {
   char buffer[1024];
@@ -853,7 +886,7 @@ memcached_return_t memcached_response(org::libmemcached::Instance* instance,
   return memcached_response(instance, buffer, sizeof(buffer), result);
 }
 
-memcached_return_t memcached_response(org::libmemcached::Instance* instance,
+memcached_return_t memcached_response(memcached_instance_st* instance,
                                       char *buffer, size_t buffer_length,
                                       memcached_result_st *result)
 {
