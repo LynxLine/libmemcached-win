@@ -113,7 +113,7 @@ static memcached_st * create_single_instance_memcached(const memcached_st *origi
    * I only want to hit _one_ server so I know the number of requests I'm
    * sending in the pipeline.
    */
-  memcached_server_instance_st instance= memcached_server_instance_by_position(original_memc, 0);
+  const memcached_instance_st * instance= memcached_server_instance_by_position(original_memc, 0);
 
   char server_string[1024];
   int server_string_length;
@@ -176,7 +176,7 @@ test_return_t init_test(memcached_st *not_used)
 in_port_t test_ports[TEST_PORT_COUNT];
 
 static memcached_return_t server_display_function(const memcached_st *ptr,
-                                                  memcached_server_instance_st server,
+                                                  const memcached_instance_st * server,
                                                   void *context)
 {
   /* Do Nothing */
@@ -189,7 +189,7 @@ static memcached_return_t server_display_function(const memcached_st *ptr,
 }
 
 static memcached_return_t dump_server_information(const memcached_st *ptr,
-                                                  memcached_server_instance_st instance,
+                                                  const memcached_instance_st * instance,
                                                   void *context)
 {
   /* Do Nothing */
@@ -244,7 +244,7 @@ test_return_t server_sort2_test(memcached_st *ptr)
   size_t bigger= 0; /* Prime the value for the test_true in server_display_function */
   memcached_server_fn callbacks[1];
   memcached_st *local_memc;
-  memcached_server_instance_st instance;
+  const memcached_instance_st * instance;
   (void)ptr;
 
   local_memc= memcached_create(NULL);
@@ -295,7 +295,7 @@ test_return_t memcached_server_remove_test(memcached_st*)
 }
 
 static memcached_return_t server_display_unsort_function(const memcached_st*,
-                                                         memcached_server_instance_st server,
+                                                         const memcached_instance_st * server,
                                                          void *context)
 {
   /* Do Nothing */
@@ -956,7 +956,7 @@ test_return_t flush_test(memcached_st *memc)
 }
 
 static memcached_return_t  server_function(const memcached_st *,
-                                           memcached_server_instance_st,
+                                           const memcached_instance_st *,
                                            void *)
 {
   /* Do Nothing */
@@ -1259,7 +1259,7 @@ test_return_t mget_end(memcached_st *memc)
 test_return_t stats_servername_test(memcached_st *memc)
 {
   memcached_stat_st memc_stat;
-  memcached_server_instance_st instance=
+  const memcached_instance_st * instance=
     memcached_server_instance_by_position(memc, 0);
 
   if (LIBMEMCACHED_WITH_SASL_SUPPORT and memcached_get_sasl_callbacks(memc))
@@ -1751,6 +1751,54 @@ test_return_t mget_execute(memcached_st *original_memc)
   return TEST_SUCCESS;
 }
 
+test_return_t MEMCACHED_BEHAVIOR_IO_KEY_PREFETCH_TEST(memcached_st *original_memc)
+{
+  test_skip(true, memcached_behavior_get(original_memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL));
+
+  memcached_st *memc= create_single_instance_memcached(original_memc, "--BINARY-PROTOCOL");
+  test_true(memc);
+
+  test_skip(MEMCACHED_SUCCESS, memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_IO_KEY_PREFETCH, 8));
+
+  keys_st keys(20480);
+
+  /* First add all of the items.. */
+  char blob[1024] = {0};
+
+  for (size_t x= 0; x < keys.size(); ++x)
+  {
+    uint64_t query_id= memcached_query_id(memc);
+    memcached_return_t rc= memcached_add(memc,
+                                         keys.key_at(x), keys.length_at(x),
+                                         blob, sizeof(blob),
+                                         0, 0);
+    test_true(rc == MEMCACHED_SUCCESS or rc == MEMCACHED_BUFFERED);
+    test_compare(query_id +1, memcached_query_id(memc));
+  }
+
+  /* Try to get all of them with a large multiget */
+  size_t counter= 0;
+  memcached_execute_fn callbacks[]= { &callback_counter };
+  test_compare(MEMCACHED_SUCCESS, 
+               memcached_mget_execute(memc,
+                                      keys.keys_ptr(), keys.lengths_ptr(),
+                                      keys.size(), callbacks, &counter, 1));
+
+  {
+    uint64_t query_id= memcached_query_id(memc);
+    test_compare(MEMCACHED_SUCCESS, 
+                 memcached_fetch_execute(memc, callbacks, (void *)&counter, 1));
+    test_compare(query_id, memcached_query_id(memc));
+
+    /* Verify that we got all of the items */
+    test_compare(keys.size(), counter);
+  }
+
+  memcached_free(memc);
+
+  return TEST_SUCCESS;
+}
+
 #define REGRESSION_BINARY_VS_BLOCK_COUNT  20480
 static pairs_st *global_pairs= NULL;
 
@@ -1894,7 +1942,7 @@ test_return_t regression_1048945_TEST(memcached_st*)
   memcached_server_list_free(list);
   test_compare(status, MEMCACHED_SUCCESS);
 
-  memcached_server_instance_st server= memcached_server_by_key(memc, test_literal_param(__func__), &status);
+  const memcached_instance_st * server= memcached_server_by_key(memc, test_literal_param(__func__), &status);
   test_true(server);
   test_compare(status, MEMCACHED_SUCCESS);
 
@@ -2644,7 +2692,7 @@ test_return_t user_supplied_bug19(memcached_st *)
 
   memcached_st *memc= memcached(test_literal_param("--server=localhost:11311/?100 --server=localhost:11312/?100"));
 
-  memcached_server_instance_st server= memcached_server_by_key(memc, "a", 1, &res);
+  const memcached_instance_st * server= memcached_server_by_key(memc, "a", 1, &res);
   test_true(server);
 
   memcached_free(memc);
@@ -2766,6 +2814,20 @@ test_return_t user_supplied_bug21(memcached_st *memc)
   return TEST_SUCCESS;
 }
 
+test_return_t comparison_operator_memcached_st_and__memcached_return_t_TEST(memcached_st *)
+{
+  test::Memc memc_;
+
+  memcached_st *memc= &memc_;
+
+  ASSERT_EQ(memc, MEMCACHED_SUCCESS);
+  test_compare(memc, MEMCACHED_SUCCESS);
+
+  ASSERT_NEQ(memc, MEMCACHED_FAILURE);
+
+  return TEST_SUCCESS;
+}
+
 test_return_t ketama_TEST(memcached_st *)
 {
   test::Memc memc("--server=10.0.1.1:11211 --server=10.0.1.2:11211");
@@ -2830,7 +2892,7 @@ test_return_t output_ketama_weighted_keys(memcached_st *)
     char *hostname = memc->hosts[server_idx].hostname;
     in_port_t port = memc->hosts[server_idx].port;
     fprintf(fp, "key %s is on host /%s:%u\n", key, hostname, port);
-    memcached_server_instance_st instance=
+    const memcached_instance_st * instance=
       memcached_server_instance_by_position(memc, host_index);
   }
   fclose(fp);
@@ -3203,7 +3265,7 @@ test_return_t check_for_1_2_3(memcached_st *memc)
 {
   memcached_version(memc);
 
-  memcached_server_instance_st instance=
+  const memcached_instance_st * instance=
     memcached_server_instance_by_position(memc, 0);
 
   if ((instance->major_version >= 1 && (instance->minor_version == 2 && instance->micro_version >= 4))
@@ -3283,7 +3345,7 @@ test_return_t noreply_test(memcached_st *memc)
     int no_msg=0;
     for (uint32_t x= 0; x < memcached_server_count(memc); ++x)
     {
-      memcached_server_instance_st instance=
+      const memcached_instance_st * instance=
         memcached_server_instance_by_position(memc, x);
       no_msg+=(int)(instance->cursor_active);
     }
@@ -3412,7 +3474,7 @@ test_return_t util_version_test(memcached_st *memc)
   }
   test_true(if_successful == false);
 
-  memcached_server_instance_st instance=
+  const memcached_instance_st * instance=
     memcached_server_instance_by_position(memc, 0);
 
   memcached_version(memc);
@@ -3458,7 +3520,7 @@ test_return_t getpid_connection_failure_test(memcached_st *memc)
 {
   test_skip(memc->servers[0].type, MEMCACHED_CONNECTION_TCP);
   memcached_return_t rc;
-  memcached_server_instance_st instance=
+  const memcached_instance_st * instance=
     memcached_server_instance_by_position(memc, 0);
 
   // Test both the version that returns a code, and the one that does not.
@@ -3476,7 +3538,7 @@ test_return_t getpid_connection_failure_test(memcached_st *memc)
 test_return_t getpid_test(memcached_st *memc)
 {
   memcached_return_t rc;
-  memcached_server_instance_st instance=
+  const memcached_instance_st * instance=
     memcached_server_instance_by_position(memc, 0);
 
   // Test both the version that returns a code, and the one that does not.
@@ -3491,7 +3553,7 @@ test_return_t getpid_test(memcached_st *memc)
 }
 
 static memcached_return_t ping_each_server(const memcached_st*,
-                                           memcached_server_instance_st instance,
+                                           const memcached_instance_st * instance,
                                            void*)
 {
   // Test both the version that returns a code, and the one that does not.
@@ -4146,8 +4208,8 @@ test_return_t regression_bug_447342(memcached_st *memc)
    * This is to verify correct behavior in the library. Fake that two servers
    * are dead..
  */
-  memcached_server_instance_st instance_one= memcached_server_instance_by_position(memc, 0);
-  memcached_server_instance_st instance_two= memcached_server_instance_by_position(memc, 2);
+  const memcached_instance_st * instance_one= memcached_server_instance_by_position(memc, 0);
+  const memcached_instance_st * instance_two= memcached_server_instance_by_position(memc, 2);
   in_port_t port0= instance_one->port();
   in_port_t port2= instance_two->port();
 
@@ -4210,7 +4272,7 @@ test_return_t regression_bug_463297(memcached_st *memc)
   test_true(memc_clone);
   test_true(memcached_version(memc_clone) == MEMCACHED_SUCCESS);
 
-  memcached_server_instance_st instance=
+  const memcached_instance_st * instance=
     memcached_server_instance_by_position(memc_clone, 0);
 
   if (instance->major_version > 1 ||
@@ -4274,7 +4336,7 @@ test_return_t regression_bug_463297(memcached_st *memc)
 test_return_t test_get_last_disconnect(memcached_st *memc)
 {
   memcached_return_t rc;
-  memcached_server_instance_st disconnected_server;
+  const memcached_instance_st * disconnected_server;
 
   /* With the working set of server */
   const char *key= "marmotte";
@@ -4342,7 +4404,7 @@ test_return_t test_multiple_get_last_disconnect(memcached_st *)
       memcached_return_t ret= memcached_set(memc, msg, strlen(msg), NULL, 0, (time_t)0, (uint32_t)0);
       test_true_got((ret == MEMCACHED_CONNECTION_FAILURE or ret == MEMCACHED_SERVER_TEMPORARILY_DISABLED), memcached_last_error_message(memc));
 
-      memcached_server_instance_st disconnected_server= memcached_server_get_last_disconnect(memc);
+      const memcached_instance_st * disconnected_server= memcached_server_get_last_disconnect(memc);
       test_true(disconnected_server);
       test_strcmp("localhost", memcached_server_name(disconnected_server));
       test_true(memcached_server_port(disconnected_server) >= 8888 and memcached_server_port(disconnected_server) <= 8892);
@@ -4367,7 +4429,7 @@ test_return_t test_verbosity(memcached_st *memc)
 }
 
 
-static memcached_return_t stat_printer(memcached_server_instance_st server,
+static memcached_return_t stat_printer(const memcached_instance_st * server,
                                        const char *key, size_t key_length,
                                        const char *value, size_t value_length,
                                        void *context)
@@ -4415,7 +4477,7 @@ test_return_t wrong_failure_counter_test(memcached_st *original_memc)
   test_true(rc == MEMCACHED_SUCCESS or rc == MEMCACHED_BUFFERED);
 
 
-  memcached_server_instance_st instance= memcached_server_instance_by_position(memc, 0);
+  const memcached_instance_st * instance= memcached_server_instance_by_position(memc, 0);
 
   /* The test is to see that the memcached_quit doesn't increase the
    * the server failure conter, so let's ensure that it is zero
@@ -4604,7 +4666,7 @@ test_return_t regression_bug_583031(memcached_st *)
 {
   memcached_st *memc= memcached_create(NULL);
   test_true(memc);
-  test_compare(MEMCACHED_SUCCESS, memcached_server_add(memc, "10.2.3.4", 11211));
+  test_compare(MEMCACHED_SUCCESS, memcached_server_add(memc, "10.2.251.4", 11211));
 
   memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_CONNECT_TIMEOUT, 3000);
   memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_RETRY_TIMEOUT, 1000);
@@ -4621,7 +4683,7 @@ test_return_t regression_bug_583031(memcached_st *)
   test_false(value);
   test_zero(length);
 
-  test_compare_got(MEMCACHED_TIMEOUT, rc, memcached_error(memc));
+  test_compare(MEMCACHED_TIMEOUT, memc);
 
   memcached_free(memc);
 
@@ -4938,7 +5000,7 @@ test_return_t kill_HUP_TEST(memcached_st *original_memc)
   memcached_st *memc= create_single_instance_memcached(original_memc, 0);
   test_true(memc);
 
-  memcached_server_instance_st instance= memcached_server_instance_by_position(memc, 0);
+  const memcached_instance_st * instance= memcached_server_instance_by_position(memc, 0);
 
   pid_t pid;
   test_true((pid= libmemcached_util_getpid(memcached_server_name(instance),
@@ -4956,7 +5018,8 @@ test_return_t kill_HUP_TEST(memcached_st *original_memc)
                                         test_literal_param(__func__), // Keys
                                         test_literal_param(__func__), // Values
                                         0, 0);
-  test_compare(ret, MEMCACHED_CONNECTION_FAILURE);
+  test_compare(ret, memc);
+  test_compare(MEMCACHED_CONNECTION_FAILURE, memc);
 
   memcached_free(memc);
 

@@ -11,7 +11,7 @@
 
 #include <libmemcached/common.h>
 
-static memcached_return_t _vdo_udp(org::libmemcached::Instance* instance,
+static memcached_return_t _vdo_udp(memcached_instance_st* instance,
                                    libmemcached_io_vector_st vector[],
                                    const size_t count)
 {
@@ -30,7 +30,7 @@ static memcached_return_t _vdo_udp(org::libmemcached::Instance* instance,
   vector[0].length= UDP_DATAGRAM_HEADER_LENGTH;
 
   msg.msg_iov= (struct iovec*)vector;
-#if defined(TARGET_OS_OSX) && TARGET_OS_OSX
+#ifdef __APPLE__
   msg.msg_iovlen= int(count);
 #else
   msg.msg_iovlen= count;
@@ -64,7 +64,7 @@ static memcached_return_t _vdo_udp(org::libmemcached::Instance* instance,
 #endif
 }
 
-memcached_return_t memcached_vdo(org::libmemcached::Instance* instance,
+memcached_return_t memcached_vdo(memcached_instance_st* instance,
                                  libmemcached_io_vector_st vector[],
                                  const size_t count,
                                  const bool with_flush)

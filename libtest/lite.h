@@ -51,7 +51,7 @@
 # include <string.h>
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32)
 # include <malloc.h>
 #else
 # include <alloca.h>
@@ -348,7 +348,7 @@ do \
   } \
 } while (0)
 
-#define ASSERT_NEQ(__expected, __actual, ...) \
+#define ASSERT_NEQ(__expected, __actual) \
 do \
 { \
   if ((__expected) == (__actual)) { \

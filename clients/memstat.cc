@@ -68,12 +68,12 @@ static struct option long_options[]=
 };
 
 
-static memcached_return_t stat_printer(memcached_server_instance_st instance,
+static memcached_return_t stat_printer(const memcached_instance_st * instance,
                                        const char *key, size_t key_length,
                                        const char *value, size_t value_length,
                                        void *context)
 {
-  static memcached_server_instance_st last= NULL;
+  static const memcached_instance_st * last= NULL;
   (void)context;
 
   if (last != instance)
@@ -89,7 +89,7 @@ static memcached_return_t stat_printer(memcached_server_instance_st instance,
 }
 
 static memcached_return_t server_print_callback(const memcached_st *,
-                                                memcached_server_instance_st instance,
+                                                const memcached_instance_st * instance,
                                                 void *)
 {
   std::cerr << memcached_server_name(instance) << ":" << memcached_server_port(instance) <<
@@ -105,25 +105,35 @@ int main(int argc, char *argv[])
   options_parse(argc, argv);
   initialize_sockets();
 
-  if (opt_servers == false)
+  if (opt_servers == NULL)
   {
     char *temp;
     if ((temp= getenv("MEMCACHED_SERVERS")))
     {
       opt_servers= strdup(temp);
     }
-    else
+
+    if (opt_servers == NULL)
     {
       std::cerr << "No Servers provided" << std::endl;
       return EXIT_FAILURE;
     }
   }
 
+  memcached_server_st* servers= memcached_servers_parse(opt_servers);
+  if (servers == NULL or memcached_server_list_count(servers) == 0)
+  {
+    std::cerr << "Invalid server list provided:" << opt_servers << std::endl;
+    return EXIT_FAILURE;
+  }
+  
+  if (opt_servers)
+  {
+    free(opt_servers);
+  }
+
   memcached_st *memc= memcached_create(NULL);
   memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, opt_binary);
-
-  memcached_server_st *servers= memcached_servers_parse(opt_servers);
-  free(opt_servers);
 
   memcached_return_t rc= memcached_server_push(memc, servers);
   memcached_server_list_free(servers);
@@ -211,9 +221,8 @@ static void run_analyzer(memcached_st *memc, memcached_stat_st *memc_stat)
     uint32_t num_of_tests= 32;
     const char *test_key= "libmemcached_test_key";
 
-    memcached_st **servers;
-    servers= static_cast<memcached_st**>(malloc(sizeof(memcached_st*) * server_count));
-    if (not servers)
+    memcached_st **servers= static_cast<memcached_st**>(malloc(sizeof(memcached_st*) * server_count));
+    if (servers == NULL)
     {
       fprintf(stderr, "Failed to allocate memory\n");
       return;
@@ -221,20 +230,25 @@ static void run_analyzer(memcached_st *memc, memcached_stat_st *memc_stat)
 
     for (uint32_t x= 0; x < server_count; x++)
     {
-      memcached_server_instance_st instance=
+      const memcached_instance_st * instance=
         memcached_server_instance_by_position(memc, x);
 
       if ((servers[x]= memcached_create(NULL)) == NULL)
       {
         fprintf(stderr, "Failed to memcached_create()\n");
         if (x > 0)
+        {
           memcached_free(servers[0]);
+        }
         x--;
 
         for (; x > 0; x--)
+        {
           memcached_free(servers[x]);
+        }
 
         free(servers);
+
         return;
       }
       memcached_server_add(servers[x],
@@ -249,7 +263,7 @@ static void run_analyzer(memcached_st *memc, memcached_stat_st *memc_stat)
 
     for (uint32_t x= 0; x < server_count; x++)
     {
-      memcached_server_instance_st instance=
+      const memcached_instance_st * instance=
         memcached_server_instance_by_position(memc, x);
       gettimeofday(&start_time, NULL);
 
@@ -258,8 +272,10 @@ static void run_analyzer(memcached_st *memc, memcached_stat_st *memc_stat)
         size_t vlen;
         char *val= memcached_get(servers[x], test_key, strlen(test_key),
                                  &vlen, &flags, &rc);
-        if (rc != MEMCACHED_NOTFOUND && rc != MEMCACHED_SUCCESS)
+        if (rc != MEMCACHED_NOTFOUND and rc != MEMCACHED_SUCCESS)
+        {
           break;
+        }
         free(val);
       }
       gettimeofday(&end_time, NULL);
@@ -290,7 +306,7 @@ static void run_analyzer(memcached_st *memc, memcached_stat_st *memc_stat)
 
     if (server_count > 1 && slowest_time > 0)
     {
-      memcached_server_instance_st slowest=
+      const memcached_instance_st * slowest=
         memcached_server_instance_by_position(memc, slowest_server);
 
       printf("---\n");
@@ -302,7 +318,9 @@ static void run_analyzer(memcached_st *memc, memcached_stat_st *memc_stat)
     printf("\n");
 
     for (uint32_t x= 0; x < server_count; x++)
+    {
       memcached_free(servers[x]);
+    }
 
     free(servers);
     free(analyze_mode);
@@ -319,9 +337,9 @@ static void print_analysis_report(memcached_st *memc,
                                   
 {
   uint32_t server_count= memcached_server_count(memc);
-  memcached_server_instance_st most_consumed_server= memcached_server_instance_by_position(memc, report->most_consumed_server);
-  memcached_server_instance_st least_free_server= memcached_server_instance_by_position(memc, report->least_free_server);
-  memcached_server_instance_st oldest_server= memcached_server_instance_by_position(memc, report->oldest_server);
+  const memcached_instance_st * most_consumed_server= memcached_server_instance_by_position(memc, report->most_consumed_server);
+  const memcached_instance_st * least_free_server= memcached_server_instance_by_position(memc, report->least_free_server);
+  const memcached_instance_st * oldest_server= memcached_server_instance_by_position(memc, report->oldest_server);
 
   printf("Memcached Cluster Analysis Report\n\n");
 

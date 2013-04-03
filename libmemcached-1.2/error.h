@@ -1,8 +1,9 @@
 /*  vim:expandtab:shiftwidth=2:tabstop=2:smarttab:
  * 
- *  Libmemcached library
+ *  LibMemcached
  *
  *  Copyright (C) 2011 Data Differential, http://datadifferential.com/
+ *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are
@@ -36,12 +37,31 @@
 
 #pragma once
 
-memcached_instance_st* memcached_instance_list(const memcached_st *);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-uint32_t memcached_instance_list_count(const memcached_st*);
+LIBMEMCACHED_API
+  const char *memcached_error(const memcached_st *);
 
-uint32_t memcached_servers_set_count(memcached_server_list_st servers, uint32_t count);
+LIBMEMCACHED_API
+  const char *memcached_last_error_message(const memcached_st *);
 
-void memcached_instance_list_free(memcached_instance_st* self, uint32_t count);
+LIBMEMCACHED_API
+  void memcached_error_print(const memcached_st *);
 
-void memcached_instance_set(memcached_st*, memcached_instance_st*, const uint32_t host_list_size);
+LIBMEMCACHED_API
+  memcached_return_t memcached_last_error(const memcached_st *);
+
+LIBMEMCACHED_API
+  int memcached_last_error_errno(const memcached_st *);
+
+LIBMEMCACHED_API
+  const char *memcached_server_error(const memcached_instance_st * ptr);
+
+LIBMEMCACHED_API
+  memcached_return_t memcached_server_error_return(const memcached_instance_st * ptr);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

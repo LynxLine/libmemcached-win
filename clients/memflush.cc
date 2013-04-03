@@ -11,6 +11,7 @@
  */
 #include "mem_config.h"
 
+#include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <getopt.h>
@@ -47,16 +48,22 @@ int main(int argc, char *argv[])
     {
       opt_servers= strdup(temp);
     }
-    else
+
+    if (opt_servers == false)
     {
       std::cerr << "No Servers provided" << std::endl;
       exit(EXIT_FAILURE);
     }
   }
 
-  memcached_st *memc= memcached_create(NULL);
+  memcached_server_st* servers= memcached_servers_parse(opt_servers);
+  if (servers == NULL or memcached_server_list_count(servers) == 0)
+  {
+    std::cerr << "Invalid server list provided:" << opt_servers << std::endl;
+    return EXIT_FAILURE;
+  }
 
-  memcached_server_st *servers= memcached_servers_parse(opt_servers);
+  memcached_st *memc= memcached_create(NULL);
   memcached_server_push(memc, servers);
   memcached_server_list_free(servers);
   memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL,
@@ -148,7 +155,13 @@ void options_parse(int argc, char *argv[])
       break;
 
     case OPT_EXPIRE: /* --expire */
+      errno= 0;
       opt_expire= (time_t)strtoll(optarg, (char **)NULL, 10);
+      if (errno != 0)
+      {
+        std::cerr << "Incorrect value passed to --expire: `" << optarg << "`" << std::cerr;
+        exit(EXIT_FAILURE);
+      }
       break;
 
     case OPT_USERNAME:
