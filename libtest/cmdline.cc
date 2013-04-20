@@ -481,8 +481,20 @@ Application::error_t Application::join()
   }
   else if (waited_pid == -1)
   {
+    std::string error_string;
+    if (stdout_result_length())
+    {
+      error_string+= " stdout: ";
+      error_string+= stdout_c_str();
+    }
+
+    if (stderr_result_length())
+    {
+      error_string+= " stderr: ";
+      error_string+= stderr_c_str();
+    }
+    Error << "waitpid() returned errno:" << strerror(errno) << " " << error_string;
     _app_exit_state= Application::UNKNOWN;
-    Error << "waitpid() returned errno:" << strerror(errno);
   }
   else
   {
@@ -612,11 +624,10 @@ void Application::Pipe::reset()
     {
       FATAL(strerror(errno));
     }
-    else
-    {
-      nonblock();
-      cloexec();
-    }
+
+    // Since either pipe2() was not found/called we set the pipe directly
+    nonblock();
+    cloexec();
   }
   _open[0]= true;
   _open[1]= true;
@@ -817,16 +828,6 @@ int exec_cmdline(const std::string& command, const char *args[], bool use_libtoo
   }
 
   return int(app.join());
-}
-
-const char *gearmand_binary() 
-{
-  return GEARMAND_BINARY;
-}
-
-const char *drizzled_binary() 
-{
-  return DRIZZLED_BINARY;
 }
 
 } // namespace exec_cmdline
