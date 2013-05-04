@@ -43,6 +43,11 @@
 
 namespace libtest {
 
+bool has_libmemcached_sasl(void)
+{
+  return false;
+}
+
 bool has_libmemcached(void)
 {
 #if defined(HAVE_LIBMEMCACHED) && HAVE_LIBMEMCACHED
@@ -85,7 +90,7 @@ bool has_postgres_support(void)
 
 bool has_gearmand()
 {
-#if defined(HAVE_GEARMAND_BINARY) && HAVE_GEARMAND_BINARY
+#if defined(GEARMAND_BINARY) && defined(HAVE_GEARMAND_BINARY) && HAVE_GEARMAND_BINARY
   if (HAVE_GEARMAND_BINARY)
   {
     std::stringstream arg_buffer;
@@ -111,7 +116,7 @@ bool has_gearmand()
 
 bool has_drizzled()
 {
-#if defined(HAVE_DRIZZLED_BINARY) && HAVE_DRIZZLED_BINARY
+#if defined(DRIZZLED_BINARY) && defined(HAVE_DRIZZLED_BINARY) && HAVE_DRIZZLED_BINARY
   if (HAVE_DRIZZLED_BINARY)
   {
     if (access(DRIZZLED_BINARY, X_OK) == 0)
@@ -126,7 +131,7 @@ bool has_drizzled()
 
 bool has_mysqld()
 {
-#if defined(HAVE_MYSQLD_BUILD) && HAVE_MYSQLD_BUILD
+#if defined(MYSQLD_BINARY) && defined(HAVE_MYSQLD_BUILD) && HAVE_MYSQLD_BUILD
   if (HAVE_MYSQLD_BUILD)
   {
     if (access(MYSQLD_BINARY, X_OK) == 0)
@@ -141,11 +146,11 @@ bool has_mysqld()
 
 static char memcached_binary_path[FILENAME_MAX];
 
-static void initialize_curl_startup()
+static void initialize_memcached_binary_path()
 {
-  memcached_binary_path[0]= NULL;
+  memcached_binary_path[0]= 0;
 
-#if defined(HAVE_MEMCACHED_BINARY) && HAVE_MEMCACHED_BINARY
+#if defined(MEMCACHED_BINARY) && defined(HAVE_MEMCACHED_BINARY) && HAVE_MEMCACHED_BINARY
   if (HAVE_MEMCACHED_BINARY)
   {
     std::stringstream arg_buffer;
@@ -170,7 +175,7 @@ static pthread_once_t memcached_binary_once= PTHREAD_ONCE_INIT;
 static void initialize_memcached_binary(void)
 {
   int ret;
-  if ((ret= pthread_once(&memcached_binary_once, initialize_curl_startup)) != 0)
+  if ((ret= pthread_once(&memcached_binary_once, initialize_memcached_binary_path)) != 0)
   {
     FATAL(strerror(ret));
   }
@@ -180,7 +185,7 @@ bool has_memcached()
 {
   initialize_memcached_binary();
 
-  if (memcached_binary_path[0])
+  if (memcached_binary_path[0] and (strlen(memcached_binary_path) > 0))
   {
     return true;
   }
@@ -200,29 +205,22 @@ const char* memcached_binary()
   return NULL;
 }
 
-bool has_memcached_sasl()
-{
-#if defined(HAVE_MEMCACHED_SASL_BINARY) && HAVE_MEMCACHED_SASL_BINARY
-  if (HAVE_MEMCACHED_SASL_BINARY)
-  {
-    if (access(MEMCACHED_SASL_BINARY, X_OK) == 0)
-    {
-      return true;
-    }
-  }
-#endif
-
-  return false;
-}
-
 const char *gearmand_binary() 
 {
+#if defined(GEARMAND_BINARY)
   return GEARMAND_BINARY;
+#else
+  return NULL;
+#endif
 }
 
 const char *drizzled_binary() 
 {
+#if defined(DRIZZLED_BINARY)
   return DRIZZLED_BINARY;
+#else
+  return NULL;
+#endif
 }
 
 } // namespace libtest

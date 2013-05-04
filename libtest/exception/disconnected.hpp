@@ -1,9 +1,8 @@
 /*  vim:expandtab:shiftwidth=2:tabstop=2:smarttab:
- * 
- *  Libmemcached library
  *
- *  Copyright (C) 2011 Data Differential, http://datadifferential.com/ 
- *  All rights reserved.
+ *  Data Differential YATL (i.e. libtest)  library
+ *
+ *  Copyright (C) 2012-2013 Data Differential, http://datadifferential.com/
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are
@@ -35,22 +34,29 @@
  *
  */
 
-
 #pragma once
 
-/* Public defines */
-#define MEMCACHED_DEFAULT_PORT 11211
-#define MEMCACHED_DEFAULT_PORT_STRING "11211"
-#define MEMCACHED_POINTS_PER_SERVER 100
-#define MEMCACHED_POINTS_PER_SERVER_KETAMA 160
-#define MEMCACHED_CONTINUUM_SIZE MEMCACHED_POINTS_PER_SERVER*100 /* This would then set max hosts to 100 */
-#define MEMCACHED_STRIDE 4
-#define MEMCACHED_DEFAULT_TIMEOUT 5000
-#define MEMCACHED_DEFAULT_CONNECT_TIMEOUT 4000
-#define MEMCACHED_CONTINUUM_ADDITION 10 /* How many extra slots we should build for in the continuum */
-#define MEMCACHED_EXPIRATION_NOT_ADD 0xffffffffU
-#define MEMCACHED_SERVER_FAILURE_LIMIT 5
-#define MEMCACHED_SERVER_FAILURE_RETRY_TIMEOUT 2
-#define MEMCACHED_SERVER_FAILURE_DEAD_TIMEOUT 0
+#include "libtest/exception.hpp"
 
+namespace libtest {
 
+class disconnected : public libtest::exception
+{
+public:
+  disconnected(const char *file, int line, const char *func, const std::string&, const in_port_t port, ...);
+
+  disconnected(const disconnected&);
+
+  // The following are just for unittesting the exception class
+  static bool is_disabled();
+  static void disable();
+  static void enable();
+  static uint32_t disabled_counter();
+  static void increment_disabled_counter();
+
+private:
+  in_port_t _port;
+  char _instance[BUFSIZ];
+};
+
+} // namespace libtest
