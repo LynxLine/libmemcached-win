@@ -45,6 +45,11 @@ public:
 
   __failure(const __failure&);
 
+  test_return_t return_code() const
+  {
+    return TEST_FAILURE;
+  }
+
 private:
 };
 

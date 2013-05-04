@@ -89,6 +89,7 @@ libmemcached/memcached_configure.h
 libtest/.hg/
 libtest/.hgignore
 libtest/abort
+libtest/backtrace
 libtest/core-count
 libtest/skiptest
 libtest/unittest
@@ -142,6 +143,7 @@ tests/memdump
 tests/memerror
 tests/memexist
 tests/memflush
+tests/memping
 tests/memplus
 tests/memrm
 tests/memslap

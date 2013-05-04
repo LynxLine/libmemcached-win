@@ -142,6 +142,25 @@ static test_return_t test_throw_skip_macro_TEST(void *)
   return TEST_FAILURE;
 }
 
+static test_return_t test_throw_skip_unless_macro_TEST(void *)
+{
+  try {
+    SKIP_UNLESS(false);
+  }
+  catch (const libtest::__skipped&)
+  {
+    return TEST_SUCCESS;
+  }
+  catch (...)
+  {
+    FAIL("SLIP_UNLESS() failed to throw libtest::_skipped");
+  }
+
+  FAIL("SLIP_UNLESS() failed to throw");
+
+  return TEST_FAILURE;
+}
+
 static test_return_t test_throw_skip_TEST(void *)
 {
   try {
@@ -941,6 +960,12 @@ static test_return_t default_port_TEST(void *)
   return TEST_SUCCESS;
 }
 
+static test_return_t check_for_VALGRIND(void *)
+{
+  test_skip_valgrind();
+  return TEST_SUCCESS;
+}
+
 static test_return_t check_for_gearman(void *)
 {
   test_skip(true, HAVE_LIBGEARMAN);
@@ -1043,6 +1068,7 @@ test_st tests_log[] ={
   {"SUCCESS", false, test_throw_success_TEST },
   {"libtest::__skipped", false, test_throw_skip_TEST },
   {"SKIP_IF", false, test_throw_skip_macro_TEST },
+  {"SKIP_UNLESS", false, test_throw_skip_unless_macro_TEST },
   {"FAIL", false, test_throw_fail_TEST },
   {"ASSERT_FALSE_", false, ASSERT_FALSE__TEST },
   {"ASSERT_FALSE", false, ASSERT_FALSE_TEST },
@@ -1186,7 +1212,7 @@ collection_st collection[] ={
   {"fatal", disable_fatal_exception, enable_fatal_exception, fatal_message_TESTS },
   {"number_of_cpus()", 0, 0, number_of_cpus_TESTS },
   {"create_tmpfile()", 0, 0, create_tmpfile_TESTS },
-  {"dns", 0, 0, dns_TESTS },
+  {"dns", check_for_VALGRIND, 0, dns_TESTS },
   {"libtest::Timer", 0, 0, timer_TESTS },
   {0, 0, 0, 0}
 };
