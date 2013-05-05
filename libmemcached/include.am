@@ -123,7 +123,7 @@ libmemcached_libmemcached_la_LIBADD+= @DL_LIB@
 if HAVE_SASL
 libmemcached_libmemcached_la_CXXFLAGS+= @PTHREAD_CFLAGS@
 libmemcached_libmemcached_la_LIBADD+= @PTHREAD_LIBS@
-libmemcached_libmemcached_la_LIBADD+= @LIBSASL_LIB@
+libmemcached_libmemcached_la_LIBADD+= @SASL_LIB@
 endif
 
 if HAVE_DTRACE
