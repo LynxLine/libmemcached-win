@@ -73,6 +73,8 @@ void close_stdio(void)
 }
 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunreachable-code"
 static const char *lookup_help(memcached_options option)
 {
   switch (option)
@@ -106,12 +108,12 @@ static const char *lookup_help(memcached_options option)
   case OPT_STAT_ARGS: return "Argument for statistics";
   case OPT_SERVER_VERSION: return "Memcached daemon software version";
   default:
-                      break;
+                           break;
   };
 
-  assert(0);
-  return "forgot to document this function :)";
+  return "Programmer error, function for options not implemented";
 }
+#pragma GCC diagnostic pop
 
 void help_command(const char *command_name, const char *description,
                   const struct option *long_options,
@@ -131,7 +133,9 @@ void help_command(const char *command_name, const char *description,
     printf("\t --%s%c\n", long_options[x].name,
            long_options[x].has_arg ? '=' : ' ');
     if ((help_message= lookup_help(memcached_options(long_options[x].val))))
+    {
       printf("\t\t%s\n", help_message);
+    }
   }
 
   printf("\n");

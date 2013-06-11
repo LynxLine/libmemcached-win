@@ -86,7 +86,9 @@ bool memcached_flag(const memcached_st& memc, const memcached_flag_t flag)
     return memcached_is_fetching_version(&memc);
   }
 
-  abort();
+  assert_msg(false, "Programmer error, unknown flag provided");
+
+  return false;
 }
 
 void memcached_flag(memcached_st& memc, const memcached_flag_t flag, const bool arg)

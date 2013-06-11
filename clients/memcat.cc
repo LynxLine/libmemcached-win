@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
   memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL,
                          (uint64_t)opt_binary);
 
-  if (opt_username and LIBMEMCACHED_WITH_SASL_SUPPORT == 0)
+  if (opt_username and libmemcached_has_feature(LIBMEMCACHED_FEATURE_HAS_SASL) == false)
   {
     memcached_free(memc);
     std::cerr << "--username was supplied, but binary was not built with SASL support." << std::endl;
@@ -186,6 +186,8 @@ int main(int argc, char *argv[])
 }
 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunreachable-code"
 void options_parse(int argc, char *argv[])
 {
   int option_index= 0;
@@ -263,3 +265,4 @@ void options_parse(int argc, char *argv[])
     }
   }
 }
+#pragma GCC diagnostic pop

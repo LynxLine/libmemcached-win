@@ -221,6 +221,7 @@ static memcached_return_t update_continuum(Memcached *ptr)
         float pct= (float)list[host_index].weight / (float)total_weight;
         pointer_per_server= (uint32_t) ((::floor((float) (pct * MEMCACHED_POINTS_PER_SERVER_KETAMA / 4 * (float)live_servers + 0.0000000001))) * 4);
         pointer_per_hash= 4;
+#if defined(DEBUG) && DEBUG
         if (DEBUG)
         {
           printf("ketama_weighted:%s|%d|%llu|%u\n",
@@ -229,6 +230,7 @@ static memcached_return_t update_continuum(Memcached *ptr)
                  (unsigned long long)list[host_index].weight,
                  pointer_per_server);
         }
+#endif
     }
 
 
@@ -255,10 +257,12 @@ static memcached_return_t update_continuum(Memcached *ptr)
                                      memcached_literal_param("snprintf(sizeof(sort_host))"));
         }
 
+#if defined(DEBUG) && DEBUG
         if (DEBUG)
         {
           fprintf(stdout, "update_continuum: key is %s\n", sort_host);
         }
+#endif
 
         if (memcached_is_weighted_ketama(ptr))
         {
@@ -335,6 +339,7 @@ static memcached_return_t update_continuum(Memcached *ptr)
   ptr->ketama.continuum_points_counter= pointer_counter;
   qsort(ptr->ketama.continuum, ptr->ketama.continuum_points_counter, sizeof(memcached_continuum_item_st), continuum_item_cmp);
 
+#if defined(DEBUG) && DEBUG
   if (DEBUG)
   {
     for (uint32_t pointer_index= 0; memcached_server_count(ptr) && pointer_index < ((live_servers * MEMCACHED_POINTS_PER_SERVER) - 1); pointer_index++)
@@ -342,6 +347,7 @@ static memcached_return_t update_continuum(Memcached *ptr)
       WATCHPOINT_ASSERT(ptr->ketama.continuum[pointer_index].value <= ptr->ketama.continuum[pointer_index + 1].value);
     }
   }
+#endif
 
   return MEMCACHED_SUCCESS;
 }

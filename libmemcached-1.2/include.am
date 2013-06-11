@@ -27,6 +27,7 @@ nobase_include_HEADERS+= libmemcached-1.2/encoding_key.h
 nobase_include_HEADERS+= libmemcached-1.2/error.h 
 nobase_include_HEADERS+= libmemcached-1.2/exception.hpp 
 nobase_include_HEADERS+= libmemcached-1.2/exist.h 
+nobase_include_HEADERS+= libmemcached-1.2/feature.h 
 nobase_include_HEADERS+= libmemcached-1.2/fetch.h 
 nobase_include_HEADERS+= libmemcached-1.2/flush.h 
 nobase_include_HEADERS+= libmemcached-1.2/flush_buffers.h 

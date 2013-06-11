@@ -95,6 +95,8 @@ int main(int argc, char *argv[])
 }
 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunreachable-code"
 void options_parse(int argc, char *argv[])
 {
   memcached_programs_help_st help_options[]=
@@ -198,3 +200,4 @@ void options_parse(int argc, char *argv[])
     exit(EXIT_SUCCESS);
   }
 }
+#pragma GCC diagnostic pop

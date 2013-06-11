@@ -407,6 +407,7 @@ static bool set_socket_options(memcached_instance_st* server)
     assert(error == 0);
   }
 
+#if defined(TCP_KEEPIDLE) && TCP_KEEPIDLE
   if (TCP_KEEPIDLE)
   {
     if (server->root->tcp_keepidle > 0)
@@ -417,6 +418,7 @@ static bool set_socket_options(memcached_instance_st* server)
       assert(error == 0);
     }
   }
+#endif
 
   if (server->root->send_size > 0)
   {

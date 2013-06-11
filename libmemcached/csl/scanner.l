@@ -42,6 +42,10 @@
 #include <libmemcached/csl/parser.h>
 #include <libmemcached/csl/symbol.h>
 
+#ifdef __clang__
+# pragma GCC diagnostic ignored "-Wunreachable-code"
+#endif
+
 #ifndef __INTEL_COMPILER
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #pragma GCC diagnostic ignored "-Wsign-compare"

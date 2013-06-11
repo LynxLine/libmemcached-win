@@ -827,7 +827,6 @@ static memcached_return_t binary_read_one_response(memcached_instance_st* instan
     case PROTOCOL_BINARY_RESPONSE_UNKNOWN_COMMAND:
     default:
       return memcached_set_error(*instance, MEMCACHED_UNKNOWN_READ_FAILURE, MEMCACHED_AT);
-      break;
     }
   }
 
