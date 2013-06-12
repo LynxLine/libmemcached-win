@@ -114,6 +114,8 @@ HTTP::HTTP(const std::string& url_arg) :
   initialize_curl();
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunreachable-code"
 bool GET::execute()
 {
   (void)init;
@@ -139,7 +141,10 @@ bool GET::execute()
 
   return false;
 }
+#pragma GCC diagnostic pop
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunreachable-code"
 bool POST::execute()
 {
 #if defined(HAVE_LIBCURL) && HAVE_LIBCURL
@@ -163,7 +168,10 @@ bool POST::execute()
 
   return false;
 }
+#pragma GCC diagnostic pop
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunreachable-code"
 bool TRACE::execute()
 {
 #if defined(HAVE_LIBCURL) && HAVE_LIBCURL
@@ -188,7 +196,10 @@ bool TRACE::execute()
 
   return false;
 }
+#pragma GCC diagnostic pop
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunreachable-code"
 bool HEAD::execute()
 {
 #if defined(HAVE_LIBCURL) && HAVE_LIBCURL
@@ -212,6 +223,7 @@ bool HEAD::execute()
 
   return false;
 }
+#pragma GCC diagnostic pop
 
 } // namespace http
 } // namespace libtest

@@ -36,8 +36,10 @@
 
 #pragma once
 
+#include <cstdlib>
+
 namespace libtest {
 
-size_t number_of_cpus();
+uint32_t number_of_cpus();
 
 } // namespace libtest

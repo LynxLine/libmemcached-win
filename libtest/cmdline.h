@@ -109,6 +109,7 @@ public:
     ~Pipe();
 
     int fd();
+    void close();
 
     enum close_t {
       READ= 0,

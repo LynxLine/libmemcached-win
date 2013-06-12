@@ -83,7 +83,7 @@ void get_world(libtest::Framework* world)
   {
     // Assume a minimum of 3, and a maximum of 8
     world->servers().set_servers_to_run((libtest::number_of_cpus() > 3) ? 
-                                        std::min(libtest::number_of_cpus(), size_t(8)) : 3);
+                                        std::min(libtest::number_of_cpus(), uint32_t(8)) : 3);
   }
 
   world->collections(collection);

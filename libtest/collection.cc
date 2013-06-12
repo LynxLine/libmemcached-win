@@ -60,6 +60,7 @@ static test_return_t runner_code(libtest::Framework* frame,
   // system.
   catch (const libtest::fatal& e)
   {
+    alarm(0);
     if (libtest::fatal::is_disabled())
     {
       libtest::fatal::increment_disabled_counter();
@@ -69,6 +70,11 @@ static test_return_t runner_code(libtest::Framework* frame,
     {
       throw;
     }
+  }
+  catch (...)
+  {
+    alarm(0);
+    throw;
   }
 
   _timer.sample();

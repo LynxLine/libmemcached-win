@@ -56,5 +56,16 @@ bool is_massive()
   return _is_massive;
 }
 
+static bool _is_ssl= false;
+void is_ssl(bool arg)
+{
+  _is_ssl= arg;
+}
+
+bool is_ssl()
+{
+  return _is_ssl;
+}
+
 } // namespace libtest
 

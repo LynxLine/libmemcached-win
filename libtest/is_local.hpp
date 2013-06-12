@@ -47,4 +47,10 @@ void is_massive(bool);
 LIBTEST_API
 bool is_massive();
 
+LIBTEST_API
+void is_ssl(bool);
+
+LIBTEST_API
+bool is_ssl();
+
 } // namespace libtest

@@ -219,6 +219,23 @@ public:
     return _error;
   }
 
+  void error(const char* file_, int line_, const std::string& error_)
+  {
+    _error_file= file_;
+    _error_line= line_;
+    _error= error_;
+  }
+
+  const char* error_file() const
+  {
+    return _error_file;
+  }
+
+  int error_line() const
+  {
+    return _error_line;
+  }
+
   void error(std::string arg)
   {
     _error= arg;
@@ -278,7 +295,7 @@ protected:
 
 private:
   bool is_helgrind() const;
-  bool is_valgrind() const;
+  virtual bool is_valgrind() const;
   bool is_debug() const;
   bool set_log_file();
   bool set_socket_file();
@@ -287,6 +304,8 @@ private:
   bool args(Application&);
 
   std::string _error;
+  const char* _error_file;
+  int _error_line;
   uint32_t _timeout; // This number should be high enough for valgrind startup (which is slow)
 };
 

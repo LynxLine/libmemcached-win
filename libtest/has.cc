@@ -43,11 +43,8 @@
 
 namespace libtest {
 
-bool has_libmemcached_sasl(void)
-{
-  return false;
-}
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunreachable-code"
 bool has_libmemcached(void)
 {
 #if defined(HAVE_LIBMEMCACHED) && HAVE_LIBMEMCACHED
@@ -59,6 +56,7 @@ bool has_libmemcached(void)
 
   return false;
 }
+#pragma GCC diagnostic pop
 
 bool has_libdrizzle(void)
 {
@@ -72,6 +70,8 @@ bool has_libdrizzle(void)
   return false;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunreachable-code"
 bool has_postgres_support(void)
 {
   char *getenv_ptr;
@@ -86,6 +86,7 @@ bool has_postgres_support(void)
 
   return false;
 }
+#pragma GCC diagnostic pop
 
 
 bool has_gearmand()

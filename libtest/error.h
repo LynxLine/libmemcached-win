@@ -52,3 +52,77 @@ static inline bool test_failed(test_return_t rc)
 {
   return (rc != TEST_SUCCESS);
 }
+
+namespace libtest {
+
+class Error
+{
+  public:
+    Error():
+      _is_error(false),
+      _file(NULL),
+      _line(-1),
+      _func(NULL)
+    {
+    }
+
+    Error(const Error& error_):
+      _is_error(false),
+      _file(NULL),
+      _line(0),
+      _func(NULL)
+    {
+      if (error_.is_error())
+      {
+        _is_error= true;
+        _file= error_.file();
+        _line= error_.line();
+        _func= error_.func();
+        _message= error_.error();
+      }
+    }
+
+    Error(const char* file_, int line_, const char* func_, const std::string& message_):
+      _is_error(true),
+      _file(file_),
+      _line(line_),
+      _func(func_),
+      _message(message_)
+    {
+    }
+
+    bool is_error() const
+    {
+      return _is_error;
+    }
+
+    const char* func() const
+    {
+      return _func;
+    }
+
+    const char* file() const
+    {
+      return _file;
+    }
+
+    int line() const
+    {
+      return _line;
+    }
+
+    const std::string& error() const
+    {
+      return _message;
+    }
+
+  private:
+    bool _is_error;
+    const char* _file;
+    int _line;
+    const char* _func;
+    std::string _message;
+};
+
+} // namespace libtest
+

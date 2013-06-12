@@ -80,6 +80,19 @@ static test_return_t VALGRIND_COMMAND_test(void *)
   return TEST_SUCCESS;
 }
 
+static test_return_t VALGRIND_CHECK_TEST(void *)
+{
+  SKIP_IF(bool(getenv("VALGRIND_COMMAND")) == false);
+  SKIP_IF(bool(getenv("TESTS_ENVIRONMENT")) == false);
+
+  if (getenv("TESTS_ENVIRONMENT")  && strstr(getenv("TESTS_ENVIRONMENT"), "valgrind"))
+  {
+    ASSERT_TRUE(valgrind_is_caller());
+  }
+
+  return TEST_SUCCESS;
+}
+
 static test_return_t HELGRIND_COMMAND_test(void *)
 {
   test_true(getenv("HELGRIND_COMMAND"));
@@ -106,6 +119,8 @@ static test_return_t test_success_test(void *)
   return TEST_SUCCESS;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunreachable-code"
 static test_return_t test_throw_success_TEST(void *)
 {
   try {
@@ -122,6 +137,7 @@ static test_return_t test_throw_success_TEST(void *)
 
   return TEST_FAILURE;
 }
+#pragma GCC diagnostic pop
 
 static test_return_t test_throw_skip_macro_TEST(void *)
 {
@@ -198,10 +214,10 @@ static test_return_t test_throw_fail_TEST(void *)
 
   return TEST_FAILURE;
 }
-#pragma GCC diagnostic ignored "-Wstack-protector"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstack-protector"
 #ifdef __clang__
-# pragma GCC diagnostic push
 # pragma GCC diagnostic ignored "-Wformat-security"
 #endif
 
@@ -222,10 +238,25 @@ static test_return_t ASSERT_FALSE__TEST(void *)
 
   return TEST_FAILURE;
 }
+#pragma GCC diagnostic pop
 
-#ifdef __clang__
-# pragma GCC diagnostic pop
-#endif
+static test_return_t ASSERT_NOT_NULL_FAIL_TEST(void *)
+{
+  const char *valid_ptr= NULL;
+  try {
+    ASSERT_NOT_NULL(valid_ptr);
+  }
+  catch (const libtest::__failure& e)
+  {
+    return TEST_SUCCESS;
+  }
+  catch (...)
+  {
+    return TEST_FAILURE;
+  }
+
+  return TEST_FAILURE;
+}
 
 static test_return_t ASSERT_NEQ_FAIL_TEST(void *)
 {
@@ -272,10 +303,14 @@ static test_return_t ASSERT_FALSE_TEST(void *)
 
 static test_return_t test_failure_test(void *)
 {
-  return TEST_SKIPPED; // Only run this when debugging
-
-  ASSERT_EQ(1, 2);
-  return TEST_SUCCESS;
+  try {
+    ASSERT_EQ(1, 2);
+  }
+  catch (...)
+  {
+    return TEST_SUCCESS;
+  }
+  return TEST_FAILURE;
 }
 
 static test_return_t local_test(void *)
@@ -296,6 +331,7 @@ static test_return_t local_not_test(void *)
 {
   return TEST_SKIPPED;
 
+#if 0
   std::string temp;
 
   const char *ptr;
@@ -323,6 +359,7 @@ static test_return_t local_not_test(void *)
   }
 
   return TEST_SUCCESS;
+#endif
 }
 
 static test_return_t var_exists_test(void *)
@@ -618,7 +655,7 @@ static test_return_t application_doesnotexist_BINARY(void *)
   true_app.will_fail();
 
   const char *args[]= { "--fubar", 0 };
-#if defined(TARGET_OS_OSX) && TARGET_OS_OSX
+#if defined(__APPLE__) && __APPLE__
   ASSERT_EQ(Application::INVALID_POSIX_SPAWN, true_app.run(args));
 #elif defined(TARGET_OS_FREEBSD) && TARGET_OS_FREEBSD
   ASSERT_EQ(Application::INVALID_POSIX_SPAWN, true_app.run(args));
@@ -878,8 +915,6 @@ static test_return_t fatal_TEST(void *)
 {
   ASSERT_EQ(fatal_calls++, fatal::disabled_counter());
   throw libtest::fatal(LIBYATL_DEFAULT_PARAM, "Testing va_args based fatal(): %d", 10); 
-
-  return TEST_SUCCESS;
 }
 
 static test_return_t number_of_cpus_TEST(void *)
@@ -966,6 +1001,8 @@ static test_return_t check_for_VALGRIND(void *)
   return TEST_SUCCESS;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunreachable-code"
 static test_return_t check_for_gearman(void *)
 {
   test_skip(true, HAVE_LIBGEARMAN);
@@ -988,9 +1025,14 @@ static test_return_t check_for_gearman(void *)
 
   return TEST_SUCCESS;
 }
+#pragma GCC diagnostic pop
 
 static test_return_t check_for_drizzle(void *)
 {
+#if defined(HAVE_CYASSL) && HAVE_CYASSL
+  SKIP_IF(HAVE_CYASSL);
+#endif
+
   test_skip(true, has_drizzled());
 
   testing_service= "drizzled";
@@ -1027,6 +1069,10 @@ static test_return_t clear_servers(void* object)
 
 static test_return_t check_for_memcached(void* object)
 {
+#if defined(HAVE_CYASSL) && HAVE_CYASSL
+  SKIP_IF(HAVE_CYASSL);
+#endif
+
   test_skip(true, has_memcached());
 
   server_startup_st *servers= (server_startup_st*)object;
@@ -1058,6 +1104,7 @@ test_st environment_tests[] ={
   {"VALGRIND_COMMAND", 0, VALGRIND_COMMAND_test },
   {"HELGRIND_COMMAND", 0, HELGRIND_COMMAND_test },
   {"GDB_COMMAND", 0, GDB_COMMAND_test },
+  {"valgrind_is_caller()", 0, VALGRIND_CHECK_TEST },
   {0, 0, 0}
 };
 
@@ -1074,6 +1121,7 @@ test_st tests_log[] ={
   {"ASSERT_FALSE", false, ASSERT_FALSE_TEST },
   {"ASSERT_NEQ", false, ASSERT_NEQ_TEST },
   {"ASSERT_NEQ FAIL", false, ASSERT_NEQ_FAIL_TEST },
+  {"ASSERT_NOT_NULL FAIL", false, ASSERT_NOT_NULL_FAIL_TEST },
   {0, 0, 0}
 };
 

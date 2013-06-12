@@ -66,7 +66,7 @@ static test_return_t help_test(void *)
 static test_return_t server_test(void *)
 {
   int fd;
-  std::string tmp_file= create_tmpfile("memcp", fd);
+  std::string tmp_file= libtest::create_tmpfile("memcp", fd);
   ASSERT_TRUE(tmp_file.c_str());
   struct stat buf;
   ASSERT_EQ(fstat(fd, &buf), 0);
