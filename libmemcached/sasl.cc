@@ -545,4 +545,9 @@ memcached_return_t memcached_destroy_sasl_auth_data(memcached_st*)
   return MEMCACHED_NOT_SUPPORTED;
 }
 
+memcached_return_t memcached_sasl_authenticate_connection(memcached_instance_st*)
+{
+  return MEMCACHED_NOT_SUPPORTED;
+}
+
 #endif
