@@ -745,7 +745,7 @@ static memcached_return_t _memcached_connect(memcached_instance_st* server, cons
     return rc;
   }
 
-  if (LIBMEMCACHED_WITH_SASL_SUPPORT and server->root->sasl.callbacks and memcached_is_udp(server->root))
+  if (libmemcached_has_feature(LIBMEMCACHED_FEATURE_HAS_SASL) and server->root->sasl.callbacks and memcached_is_udp(server->root))
   {
     return memcached_set_error(*server, MEMCACHED_INVALID_HOST_PROTOCOL, MEMCACHED_AT, memcached_literal_param("SASL is not supported for UDP connections"));
   }
@@ -762,8 +762,7 @@ static memcached_return_t _memcached_connect(memcached_instance_st* server, cons
   case MEMCACHED_CONNECTION_TCP:
     rc= network_connect(server);
 
-#if defined(LIBMEMCACHED_WITH_SASL_SUPPORT)
-    if (LIBMEMCACHED_WITH_SASL_SUPPORT)
+    if (libmemcached_has_feature(LIBMEMCACHED_FEATURE_HAS_SASL))
     {
       if (server->fd != INVALID_SOCKET and server->root->sasl.callbacks)
       {
@@ -775,7 +774,6 @@ static memcached_return_t _memcached_connect(memcached_instance_st* server, cons
         }
       }
     }
-#endif
     break;
 
   case MEMCACHED_CONNECTION_UNIX_SOCKET:
