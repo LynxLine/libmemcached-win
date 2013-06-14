@@ -1,6 +1,6 @@
 # vim:ft=automake
 
-rpm-build: support/$(PACKAGE).spec distcheck
+rpm-build: support/$(PACKAGE).spec dist
 	@rm -f *.rpm
 	@rm -f ~/rpmbuild/RPMS/x86_64/$(PACKAGE)-$(VERSION)*.rpm
 	@rm -f ~/rpmbuild/SRPMS/$(PACKAGE)-$(VERSION)*.rpm
