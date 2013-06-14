@@ -135,10 +135,12 @@ static void sasl_startup_function(void)
 
 memcached_return_t memcached_sasl_authenticate_connection(memcached_instance_st* server)
 {
+#if defined(LIBMEMCACHED_WITH_SASL_SUPPORT) && LIBMEMCACHED_WITH_SASL_SUPPORT == 0
   if (LIBMEMCACHED_WITH_SASL_SUPPORT == 0)
   {
     return MEMCACHED_NOT_SUPPORTED;
   }
+#endif
 
   if (server == NULL)
   {
@@ -324,197 +326,197 @@ memcached_return_t memcached_set_sasl_auth_data(memcached_st *shell,
                                                 const char *username,
                                                 const char *password)
 {
-  Memcached* ptr= memcached2Memcached(shell);
-  if (LIBMEMCACHED_WITH_SASL_SUPPORT == 0)
+  if (libmemcached_has_feature(LIBMEMCACHED_FEATURE_HAS_SASL))
   {
-    return MEMCACHED_NOT_SUPPORTED;
+    Memcached* ptr= memcached2Memcached(shell);
+
+    if (ptr == NULL or username == NULL or password == NULL)
+    {
+      return MEMCACHED_INVALID_ARGUMENTS;
+    }
+
+    memcached_return_t ret;
+    if (memcached_failed(ret= memcached_behavior_set(ptr, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 1)))
+    {
+      return memcached_set_error(*ptr, ret, MEMCACHED_AT, memcached_literal_param("Unable change to binary protocol which is required for SASL."));
+    }
+
+    memcached_destroy_sasl_auth_data(ptr);
+
+    sasl_callback_t *callbacks= libmemcached_xcalloc(ptr, 4, sasl_callback_t);
+    size_t password_length= strlen(password);
+    size_t username_length= strlen(username);
+    char *name= (char *)libmemcached_malloc(ptr, username_length +1);
+    sasl_secret_t *secret= (sasl_secret_t*)libmemcached_malloc(ptr, password_length +1 + sizeof(sasl_secret_t));
+
+    if (callbacks == NULL or name == NULL or secret == NULL)
+    {
+      libmemcached_free(ptr, callbacks);
+      libmemcached_free(ptr, name);
+      libmemcached_free(ptr, secret);
+      return memcached_set_error(*ptr, MEMCACHED_MEMORY_ALLOCATION_FAILURE, MEMCACHED_AT);
+    }
+
+    secret->len= password_length;
+    memcpy(secret->data, password, password_length);
+    secret->data[password_length]= 0;
+
+    callbacks[0].id= SASL_CB_USER;
+    callbacks[0].proc= (int (*)())get_username;
+    callbacks[0].context= strncpy(name, username, username_length +1);
+    callbacks[1].id= SASL_CB_AUTHNAME;
+    callbacks[1].proc= (int (*)())get_username;
+    callbacks[1].context= name;
+    callbacks[2].id= SASL_CB_PASS;
+    callbacks[2].proc= (int (*)())get_password;
+    callbacks[2].context= secret;
+    callbacks[3].id= SASL_CB_LIST_END;
+
+    ptr->sasl.callbacks= callbacks;
+    ptr->sasl.is_allocated= true;
+
+    return MEMCACHED_SUCCESS;
   }
-
-  if (ptr == NULL or username == NULL or password == NULL)
-  {
-    return MEMCACHED_INVALID_ARGUMENTS;
-  }
-
-  memcached_return_t ret;
-  if (memcached_failed(ret= memcached_behavior_set(ptr, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL, 1)))
-  {
-    return memcached_set_error(*ptr, ret, MEMCACHED_AT, memcached_literal_param("Unable change to binary protocol which is required for SASL."));
-  }
-
-  memcached_destroy_sasl_auth_data(ptr);
-
-  sasl_callback_t *callbacks= libmemcached_xcalloc(ptr, 4, sasl_callback_t);
-  size_t password_length= strlen(password);
-  size_t username_length= strlen(username);
-  char *name= (char *)libmemcached_malloc(ptr, username_length +1);
-  sasl_secret_t *secret= (sasl_secret_t*)libmemcached_malloc(ptr, password_length +1 + sizeof(sasl_secret_t));
-
-  if (callbacks == NULL or name == NULL or secret == NULL)
-  {
-    libmemcached_free(ptr, callbacks);
-    libmemcached_free(ptr, name);
-    libmemcached_free(ptr, secret);
-    return memcached_set_error(*ptr, MEMCACHED_MEMORY_ALLOCATION_FAILURE, MEMCACHED_AT);
-  }
-
-  secret->len= password_length;
-  memcpy(secret->data, password, password_length);
-  secret->data[password_length]= 0;
-
-  callbacks[0].id= SASL_CB_USER;
-  callbacks[0].proc= (int (*)())get_username;
-  callbacks[0].context= strncpy(name, username, username_length +1);
-  callbacks[1].id= SASL_CB_AUTHNAME;
-  callbacks[1].proc= (int (*)())get_username;
-  callbacks[1].context= name;
-  callbacks[2].id= SASL_CB_PASS;
-  callbacks[2].proc= (int (*)())get_password;
-  callbacks[2].context= secret;
-  callbacks[3].id= SASL_CB_LIST_END;
-
-  ptr->sasl.callbacks= callbacks;
-  ptr->sasl.is_allocated= true;
-
-  return MEMCACHED_SUCCESS;
+  return MEMCACHED_NOT_SUPPORTED;
 }
 
 memcached_return_t memcached_destroy_sasl_auth_data(memcached_st *shell)
 {
-  if (LIBMEMCACHED_WITH_SASL_SUPPORT == 0)
+  if (libmemcached_has_feature(LIBMEMCACHED_FEATURE_HAS_SASL))
   {
-    return MEMCACHED_NOT_SUPPORTED;
-  }
+    Memcached* ptr= memcached2Memcached(shell);
+    if (ptr == NULL)
+    {
+      return MEMCACHED_INVALID_ARGUMENTS;
+    }
 
-  Memcached* ptr= memcached2Memcached(shell);
-  if (ptr == NULL)
-  {
-    return MEMCACHED_INVALID_ARGUMENTS;
-  }
+    if (ptr->sasl.callbacks == NULL)
+    {
+      return MEMCACHED_SUCCESS;
+    }
 
-  if (ptr->sasl.callbacks == NULL)
-  {
+    if (ptr->sasl.is_allocated)
+    {
+      libmemcached_free(ptr, ptr->sasl.callbacks[0].context);
+      libmemcached_free(ptr, ptr->sasl.callbacks[2].context);
+      libmemcached_free(ptr, (void*)ptr->sasl.callbacks);
+      ptr->sasl.is_allocated= false;
+    }
+
+    ptr->sasl.callbacks= NULL;
+
     return MEMCACHED_SUCCESS;
   }
 
-  if (ptr->sasl.is_allocated)
-  {
-    libmemcached_free(ptr, ptr->sasl.callbacks[0].context);
-    libmemcached_free(ptr, ptr->sasl.callbacks[2].context);
-    libmemcached_free(ptr, (void*)ptr->sasl.callbacks);
-    ptr->sasl.is_allocated= false;
-  }
-
-  ptr->sasl.callbacks= NULL;
-
-  return MEMCACHED_SUCCESS;
+  return MEMCACHED_NOT_SUPPORTED;
 }
 
 memcached_return_t memcached_clone_sasl(memcached_st *clone, const  memcached_st *source)
 {
-  if (LIBMEMCACHED_WITH_SASL_SUPPORT == 0)
+  if (libmemcached_has_feature(LIBMEMCACHED_FEATURE_HAS_SASL))
   {
-    return MEMCACHED_NOT_SUPPORTED;
-  }
+    if (clone == NULL or source == NULL)
+    {
+      return MEMCACHED_INVALID_ARGUMENTS;
+    }
 
-  if (clone == NULL or source == NULL)
-  {
-    return MEMCACHED_INVALID_ARGUMENTS;
-  }
+    if (source->sasl.callbacks == NULL)
+    {
+      return MEMCACHED_SUCCESS;
+    }
 
-  if (source->sasl.callbacks == NULL)
-  {
+    /* Hopefully we are using our own callback mechanisms.. */
+    if (source->sasl.callbacks[0].id == SASL_CB_USER &&
+        source->sasl.callbacks[0].proc ==  (int (*)())get_username &&
+        source->sasl.callbacks[1].id == SASL_CB_AUTHNAME &&
+        source->sasl.callbacks[1].proc ==  (int (*)())get_username &&
+        source->sasl.callbacks[2].id == SASL_CB_PASS &&
+        source->sasl.callbacks[2].proc ==  (int (*)())get_password &&
+        source->sasl.callbacks[3].id == SASL_CB_LIST_END)
+    {
+      sasl_secret_t *secret= (sasl_secret_t *)source->sasl.callbacks[2].context;
+      return memcached_set_sasl_auth_data(clone,
+                                          (const char*)source->sasl.callbacks[0].context,
+                                          (const char*)secret->data);
+    }
+
+    /*
+     * But we're not. It may work if we know what the user tries to pass
+     * into the list, but if we don't know the ID we don't know how to handle
+     * the context...
+     */
+    ptrdiff_t total= 0;
+
+    while (source->sasl.callbacks[total].id != SASL_CB_LIST_END)
+    {
+      switch (source->sasl.callbacks[total].id)
+      {
+        case SASL_CB_USER:
+        case SASL_CB_AUTHNAME:
+        case SASL_CB_PASS:
+          break;
+        default:
+          /* I don't know how to deal with this... */
+          return MEMCACHED_NOT_SUPPORTED;
+      }
+
+      ++total;
+    }
+
+    sasl_callback_t *callbacks= libmemcached_xcalloc(clone, total +1, sasl_callback_t);
+    if (callbacks == NULL)
+    {
+      return MEMCACHED_MEMORY_ALLOCATION_FAILURE;
+    }
+    memcpy(callbacks, source->sasl.callbacks, (total + 1) * sizeof(sasl_callback_t));
+
+    /* Now update the context... */
+    for (ptrdiff_t x= 0; x < total; ++x)
+    {
+      if (callbacks[x].id == SASL_CB_USER || callbacks[x].id == SASL_CB_AUTHNAME)
+      {
+        callbacks[x].context= (sasl_callback_t*)libmemcached_malloc(clone, strlen((const char*)source->sasl.callbacks[x].context));
+
+        if (callbacks[x].context == NULL)
+        {
+          /* Failed to allocate memory, clean up previously allocated memory */
+          for (ptrdiff_t y= 0; y < x; ++y)
+          {
+            libmemcached_free(clone, clone->sasl.callbacks[y].context);
+          }
+
+          libmemcached_free(clone, callbacks);
+          return MEMCACHED_MEMORY_ALLOCATION_FAILURE;
+        }
+        strncpy((char*)callbacks[x].context, (const char*)source->sasl.callbacks[x].context, sizeof(callbacks[x].context));
+      }
+      else
+      {
+        sasl_secret_t *src= (sasl_secret_t *)source->sasl.callbacks[x].context;
+        sasl_secret_t *n= (sasl_secret_t*)libmemcached_malloc(clone, src->len + 1 + sizeof(*n));
+        if (n == NULL)
+        {
+          /* Failed to allocate memory, clean up previously allocated memory */
+          for (ptrdiff_t y= 0; y < x; ++y)
+          {
+            libmemcached_free(clone, clone->sasl.callbacks[y].context);
+          }
+
+          libmemcached_free(clone, callbacks);
+          return MEMCACHED_MEMORY_ALLOCATION_FAILURE;
+        }
+        memcpy(n, src, src->len + 1 + sizeof(*n));
+        callbacks[x].context= n;
+      }
+    }
+
+    clone->sasl.callbacks= callbacks;
+    clone->sasl.is_allocated= true;
+
     return MEMCACHED_SUCCESS;
   }
 
-  /* Hopefully we are using our own callback mechanisms.. */
-  if (source->sasl.callbacks[0].id == SASL_CB_USER &&
-      source->sasl.callbacks[0].proc ==  (int (*)())get_username &&
-      source->sasl.callbacks[1].id == SASL_CB_AUTHNAME &&
-      source->sasl.callbacks[1].proc ==  (int (*)())get_username &&
-      source->sasl.callbacks[2].id == SASL_CB_PASS &&
-      source->sasl.callbacks[2].proc ==  (int (*)())get_password &&
-      source->sasl.callbacks[3].id == SASL_CB_LIST_END)
-  {
-    sasl_secret_t *secret= (sasl_secret_t *)source->sasl.callbacks[2].context;
-    return memcached_set_sasl_auth_data(clone,
-                                        (const char*)source->sasl.callbacks[0].context,
-                                        (const char*)secret->data);
-  }
-
-  /*
-   * But we're not. It may work if we know what the user tries to pass
-   * into the list, but if we don't know the ID we don't know how to handle
-   * the context...
- */
-  ptrdiff_t total= 0;
-
-  while (source->sasl.callbacks[total].id != SASL_CB_LIST_END)
-  {
-    switch (source->sasl.callbacks[total].id)
-    {
-    case SASL_CB_USER:
-    case SASL_CB_AUTHNAME:
-    case SASL_CB_PASS:
-      break;
-    default:
-      /* I don't know how to deal with this... */
-      return MEMCACHED_NOT_SUPPORTED;
-    }
-
-    ++total;
-  }
-
-  sasl_callback_t *callbacks= libmemcached_xcalloc(clone, total +1, sasl_callback_t);
-  if (callbacks == NULL)
-  {
-    return MEMCACHED_MEMORY_ALLOCATION_FAILURE;
-  }
-  memcpy(callbacks, source->sasl.callbacks, (total + 1) * sizeof(sasl_callback_t));
-
-  /* Now update the context... */
-  for (ptrdiff_t x= 0; x < total; ++x)
-  {
-    if (callbacks[x].id == SASL_CB_USER || callbacks[x].id == SASL_CB_AUTHNAME)
-    {
-      callbacks[x].context= (sasl_callback_t*)libmemcached_malloc(clone, strlen((const char*)source->sasl.callbacks[x].context));
-
-      if (callbacks[x].context == NULL)
-      {
-        /* Failed to allocate memory, clean up previously allocated memory */
-        for (ptrdiff_t y= 0; y < x; ++y)
-        {
-          libmemcached_free(clone, clone->sasl.callbacks[y].context);
-        }
-
-        libmemcached_free(clone, callbacks);
-        return MEMCACHED_MEMORY_ALLOCATION_FAILURE;
-      }
-      strncpy((char*)callbacks[x].context, (const char*)source->sasl.callbacks[x].context, sizeof(callbacks[x].context));
-    }
-    else
-    {
-      sasl_secret_t *src= (sasl_secret_t *)source->sasl.callbacks[x].context;
-      sasl_secret_t *n= (sasl_secret_t*)libmemcached_malloc(clone, src->len + 1 + sizeof(*n));
-      if (n == NULL)
-      {
-        /* Failed to allocate memory, clean up previously allocated memory */
-        for (ptrdiff_t y= 0; y < x; ++y)
-        {
-          libmemcached_free(clone, clone->sasl.callbacks[y].context);
-        }
-
-        libmemcached_free(clone, callbacks);
-        return MEMCACHED_MEMORY_ALLOCATION_FAILURE;
-      }
-      memcpy(n, src, src->len + 1 + sizeof(*n));
-      callbacks[x].context= n;
-    }
-  }
-
-  clone->sasl.callbacks= callbacks;
-  clone->sasl.is_allocated= true;
-
-  return MEMCACHED_SUCCESS;
+  return MEMCACHED_NOT_SUPPORTED;
 }
 
 #else
@@ -534,6 +536,16 @@ memcached_return_t memcached_set_sasl_auth_data(memcached_st *, const char *, co
 }
 
 memcached_return_t memcached_clone_sasl(memcached_st *, const  memcached_st *)
+{
+  return MEMCACHED_NOT_SUPPORTED;
+}
+
+memcached_return_t memcached_destroy_sasl_auth_data(memcached_st*)
+{
+  return MEMCACHED_NOT_SUPPORTED;
+}
+
+memcached_return_t memcached_sasl_authenticate_connection(memcached_instance_st*)
 {
   return MEMCACHED_NOT_SUPPORTED;
 }

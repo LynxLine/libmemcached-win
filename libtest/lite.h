@@ -2,7 +2,7 @@
  *
  *  Data Differential YATL (i.e. libtest)  library
  *
- *  Copyright (C) 2012 Data Differential, http://datadifferential.com/
+ *  Copyright (C) 2012-2013 Data Differential, http://datadifferential.com/
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are
@@ -192,6 +192,18 @@ do \
   } \
 } while (0)
 
+#define ASSERT_NULL(__expression) \
+do \
+{ \
+  if ((__expression) != NULL) { \
+    if (YATL_FULL) { \
+      FAIL("Assertion '%s' != NULL", #__expression);\
+    } \
+    fprintf(stderr, "\n%s:%d: %s Assertion '%s' != NULL\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #__expression);\
+    exit(EXIT_FAILURE); \
+  } \
+} while (0)
+
 #define ASSERT_NULL_(__expression, ...) \
 do \
 { \
@@ -213,9 +225,9 @@ do \
 { \
   if ((__expression) == NULL) { \
     if (YATL_FULL) { \
-      FAIL("Assertion '%s' == NULL", #__expression,);\
+      FAIL("Assertion '%s' == NULL", #__expression);\
     } \
-    fprintf(stderr, "\n%s:%d: %s Assertion '%s' == NULL\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #__expression,);\
+    fprintf(stderr, "\n%s:%d: %s Assertion '%s' == NULL\n", __FILE__, __LINE__, __PRETTY_FUNCTION__, #__expression);\
     exit(EXIT_FAILURE); \
   } \
 } while (0)
@@ -285,8 +297,8 @@ do \
 { \
   size_t __expected_length; \
   size_t __actual_length; \
-  int ret= yatl_strcmp(__expected_str, __actual_str, &__expected_length, &__actual_length); \
-  if (ret) { \
+  int __ret= yatl_strcmp(__expected_str, __actual_str, &__expected_length, &__actual_length); \
+  if (__ret) { \
     if (YATL_FULL) { \
       FAIL("Assertion '%.*s' != '%.*s'\n", \
            (int)(__expected_length), (__expected_str), \
@@ -304,8 +316,8 @@ do \
 { \
   size_t __expected_length; \
   size_t __actual_length; \
-  int ret= yatl_strcmp(__expected_str, __actual_str, &__expected_length, &__actual_length); \
-  if (ret) { \
+  int __ret= yatl_strcmp(__expected_str, __actual_str, &__expected_length, &__actual_length); \
+  if (__ret) { \
     size_t ask= snprintf(0, 0, __VA_ARGS__); \
     ask++; \
     char *buffer= (char*)alloca(sizeof(char) * ask); \
@@ -329,8 +341,8 @@ do \
 { \
   size_t __expected_length; \
   size_t __actual_length; \
-  int ret= yatl_strcmp(__expected_str, __actual_str, &__expected_length, &__actual_length); \
-  if (ret == 0) { \
+  int __ret= yatl_strcmp(__expected_str, __actual_str, &__expected_length, &__actual_length); \
+  if (__ret == 0) { \
     if (YATL_FULL) { \
       FAIL("Assertion '%.*s' == '%.*s'", \
            (int)(__expected_length), (__expected_str), \
@@ -348,8 +360,8 @@ do \
 { \
   size_t __expected_length; \
   size_t __actual_length; \
-  int ret= yatl_strcmp(__expected_str, __actual_str, &__expected_length, &__actual_length); \
-  if (ret == 0) { \
+  int __ret= yatl_strcmp(__expected_str, __actual_str, &__expected_length, &__actual_length); \
+  if (__ret == 0) { \
     size_t ask= snprintf(0, 0, __VA_ARGS__); \
     ask++; \
     char *buffer= (char*)alloca(sizeof(char) * ask); \

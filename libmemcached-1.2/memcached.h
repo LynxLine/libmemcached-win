@@ -59,6 +59,8 @@
 #include <libmemcached-1.2/configure.h>
 #include <libmemcached-1.2/platform.h>
 
+#include <libmemcached-1.2/feature.h>
+
 #include <libmemcached-1.2/limits.h>
 #include <libmemcached-1.2/defaults.h>
 

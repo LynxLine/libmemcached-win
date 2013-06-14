@@ -42,7 +42,8 @@ noinst_HEADERS+= clients/ms_thread.h
 noinst_HEADERS+= clients/utilities.h
 
 noinst_LTLIBRARIES+= clients/libutilities.la
-clients_libutilities_la_SOURCES= clients/utilities.cc
+clients_libutilities_la_SOURCES=
+clients_libutilities_la_SOURCES+= clients/utilities.cc
 
 clients_memcat_SOURCES= clients/memcat.cc
 clients_memcat_LDADD= $(CLIENTS_LDADDS)

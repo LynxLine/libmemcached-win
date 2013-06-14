@@ -166,6 +166,11 @@ public:
     return true;
   }
 
+  bool is_valgrind() const
+  {
+    return false;
+  }
+
   bool has_port_option() const
   {
     return true;

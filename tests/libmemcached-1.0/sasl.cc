@@ -64,28 +64,21 @@ static test_return_t pre_sasl(memcached_st *)
  */
 static test_return_t sasl_auth_test(memcached_st *memc)
 {
-#ifdef LIBMEMCACHED_WITH_SASL_SUPPORT
-  if (LIBMEMCACHED_WITH_SASL_SUPPORT)
-  {
-    test_compare(MEMCACHED_SUCCESS, memcached_set(memc, "foo", 3, "bar", 3, (time_t)0, (uint32_t)0));
-    test_compare(MEMCACHED_SUCCESS, memcached_delete(memc, "foo", 3, 0));
-    test_compare(MEMCACHED_SUCCESS, memcached_destroy_sasl_auth_data(memc));
-    test_compare(MEMCACHED_SUCCESS, memcached_destroy_sasl_auth_data(memc));
-    test_compare(MEMCACHED_INVALID_ARGUMENTS, memcached_destroy_sasl_auth_data(NULL));
-    memcached_quit(memc);
+  SKIP_IF(libmemcached_has_feature(LIBMEMCACHED_FEATURE_HAS_SASL));
 
-    test_compare(MEMCACHED_AUTH_FAILURE, 
-                 memcached_set(memc, "foo", 3, "bar", 3, (time_t)0, (uint32_t)0));
-    test_compare(MEMCACHED_SUCCESS, memcached_destroy_sasl_auth_data(memc));
+  test_compare(MEMCACHED_SUCCESS, memcached_set(memc, "foo", 3, "bar", 3, (time_t)0, (uint32_t)0));
+  test_compare(MEMCACHED_SUCCESS, memcached_delete(memc, "foo", 3, 0));
+  test_compare(MEMCACHED_SUCCESS, memcached_destroy_sasl_auth_data(memc));
+  test_compare(MEMCACHED_SUCCESS, memcached_destroy_sasl_auth_data(memc));
+  test_compare(MEMCACHED_INVALID_ARGUMENTS, memcached_destroy_sasl_auth_data(NULL));
+  memcached_quit(memc);
 
-    memcached_quit(memc);
-    return TEST_SUCCESS;
-  }
-#else
-  (void)memc;
-#endif
+  test_compare(MEMCACHED_AUTH_FAILURE, 
+               memcached_set(memc, "foo", 3, "bar", 3, (time_t)0, (uint32_t)0));
+  test_compare(MEMCACHED_SUCCESS, memcached_destroy_sasl_auth_data(memc));
 
-  return TEST_SKIPPED;
+  memcached_quit(memc);
+  return TEST_SUCCESS;
 }
 
 

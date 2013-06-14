@@ -252,10 +252,12 @@ static __attribute__((noreturn)) void* connection_release(void *arg)
   pthread_exit(arg);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunreachable-code"
 test_return_t connection_pool3_test(memcached_st *memc)
 {
 #ifdef __APPLE__
-  return TEST_SKIPPED;
+  SKIP_IF(__APPLE__);
 #endif
 
   memcached_pool_st* pool= memcached_pool_create(memc, 1, 1);
@@ -321,6 +323,7 @@ test_return_t connection_pool3_test(memcached_st *memc)
 
   return TEST_SUCCESS;
 }
+#pragma GCC diagnostic pop
 
 static memcached_st * create_single_instance_memcached(const memcached_st *original_memc, const char *options)
 {

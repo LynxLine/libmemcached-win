@@ -38,12 +38,13 @@
 #include <libtest/common.h>
 
 #include <cassert>
+#include <cstddef>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <fnmatch.h>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <memory>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -81,10 +82,12 @@ static void stats_print(libtest::Framework *frame)
 #include <getopt.h>
 #include <unistd.h>
 
-int main(int argc, char *argv[])
+int main(int argc, char *argv[], char* environ_[])
 {
   bool opt_massive= false;
+  bool opt_ssl= false;
   unsigned long int opt_repeat= 1; // Run all tests once
+  bool opt_verbose= false;
   bool opt_quiet= false;
   std::string collection_to_run;
   std::string wildcard;
@@ -120,22 +123,27 @@ int main(int argc, char *argv[])
   // Options parsing
   {
     enum long_option_t {
+      OPT_LIBYATL_VERBOSE,
       OPT_LIBYATL_VERSION,
       OPT_LIBYATL_MATCH_COLLECTION,
       OPT_LIBYATL_MASSIVE,
       OPT_LIBYATL_QUIET,
       OPT_LIBYATL_MATCH_WILDCARD,
-      OPT_LIBYATL_REPEAT
+      OPT_LIBYATL_REPEAT,
+      OPT_LIBYATL_SSL,
+      OPT_LIBYATL_MAX
     };
 
     static struct option long_options[]=
     {
+      { "verbose", no_argument, NULL, OPT_LIBYATL_VERBOSE },
       { "version", no_argument, NULL, OPT_LIBYATL_VERSION },
       { "quiet", no_argument, NULL, OPT_LIBYATL_QUIET },
       { "repeat", required_argument, NULL, OPT_LIBYATL_REPEAT },
       { "collection", required_argument, NULL, OPT_LIBYATL_MATCH_COLLECTION },
       { "wildcard", required_argument, NULL, OPT_LIBYATL_MATCH_WILDCARD },
       { "massive", no_argument, NULL, OPT_LIBYATL_MASSIVE },
+      { "ssl", no_argument, NULL, OPT_LIBYATL_SSL },
       { 0, 0, 0, 0 }
     };
 
@@ -150,6 +158,10 @@ int main(int argc, char *argv[])
 
       switch (option_rv)
       {
+      case OPT_LIBYATL_VERBOSE:
+        opt_verbose= true;
+        break;
+
       case OPT_LIBYATL_VERSION:
         break;
 
@@ -175,6 +187,10 @@ int main(int argc, char *argv[])
         wildcard= optarg;
         break;
 
+      case OPT_LIBYATL_SSL:
+        opt_ssl= true;
+        break;
+
       case OPT_LIBYATL_MASSIVE:
         opt_massive= true;
         break;
@@ -187,6 +203,14 @@ int main(int argc, char *argv[])
       default:
         break;
       }
+    }
+  }
+
+  if (opt_verbose)
+  {
+    for (char** ptr= environ_; *ptr; ptr++)
+    {
+      Out << *ptr;
     }
   }
 
@@ -218,14 +242,29 @@ int main(int argc, char *argv[])
     }
   }
 
+  if ((bool(getenv("YATL_WILDCARD"))))
+  {
+    wildcard= getenv("YATL_WILDCARD");
+  }
+
   if ((bool(getenv("YATL_RUN_MASSIVE_TESTS"))) or opt_massive)
   {
     opt_massive= true;
   }
 
+  if ((bool(getenv("YATL_SSL"))) or opt_ssl)
+  {
+    opt_ssl= true;
+  }
+
   if (opt_quiet)
   {
     close(STDOUT_FILENO);
+  }
+
+  if (opt_ssl)
+  {
+    is_ssl(opt_ssl);
   }
 
   if (opt_massive)
@@ -345,7 +384,11 @@ int main(int argc, char *argv[])
 
       std::ofstream xml_file;
       std::string file_name;
-      file_name.append(&tmp_directory[0]);
+      if (getenv("WORKSPACE"))
+      {
+        file_name.append(getenv("WORKSPACE"));
+        file_name.append("/");
+      }
       file_name.append(frame->name());
       file_name.append(".xml");
       xml_file.open(file_name.c_str(), std::ios::trunc);

@@ -39,6 +39,8 @@
 #include <uuid/uuid.h>
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunreachable-code"
 struct keys_st {
 public:
   keys_st(size_t arg)
@@ -143,3 +145,4 @@ private:
     libtest::vchar_ptr_t _keys;
     std::vector<size_t> _lengths;
 };
+#pragma GCC diagnostic pop

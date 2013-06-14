@@ -65,8 +65,13 @@ class Context;
 #include <libmemcached/csl/symbol.h>
 #include <libmemcached/csl/scanner.h>
 
+#ifdef __clang__
+# pragma GCC diagnostic ignored "-Wunreachable-code"
+#endif
+
 #ifndef __INTEL_COMPILER
 # pragma GCC diagnostic ignored "-Wold-style-cast"
+# pragma GCC diagnostic ignored "-Wunreachable-code"
 #endif
 
 #ifndef __INTEL_COMPILER

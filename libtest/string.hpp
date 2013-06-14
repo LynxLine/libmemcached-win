@@ -40,6 +40,7 @@
 
 #define test_literal_param util_literal_param
 #define test_literal_compare_param util_literal_compare_param
+#define test_literal_printf_param util_literal_printf_param
 #define test_literal_param_size util_literal_param_size
 #define test_string_make_from_cstr util_string_make_from_cstr
 #define test_string_make_from_array util_string_make_from_array

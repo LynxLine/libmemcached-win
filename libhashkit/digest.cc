@@ -42,6 +42,8 @@ uint32_t hashkit_digest(const hashkit_st *self, const char *key, size_t key_leng
   return self->base_hash.function(key, key_length, self->base_hash.context);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunreachable-code"
 uint32_t libhashkit_digest(const char *key, size_t key_length, hashkit_hash_algorithm_t hash_algorithm)
 {
   switch (hash_algorithm)
@@ -91,3 +93,4 @@ uint32_t libhashkit_digest(const char *key, size_t key_length, hashkit_hash_algo
 
   return 1;
 }
+#pragma GCC diagnostic push

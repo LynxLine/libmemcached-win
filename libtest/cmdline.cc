@@ -388,28 +388,56 @@ bool Application::slurp()
   }
 
   bool data_was_read= false;
-  if (fds[0].revents & POLLRDNORM)
+  if (fds[0].revents)
   {
-    if (stdout_fd.read(_stdout_buffer) == true)
+    if (fds[0].revents & POLLRDNORM)
     {
-      data_was_read= true;
+      if (stdout_fd.read(_stdout_buffer) == true)
+      {
+        data_was_read= true;
+      }
+    }
+
+    if (fds[0].revents & (POLLERR | POLLHUP | POLLNVAL))
+    {
+      stdout_fd.close();
+
+      if (fds[0].revents & POLLERR)
+      {
+        Error << "getsockopt(stdout)";
+      }
     }
   }
 
-  if (fds[1].revents & POLLRDNORM)
+  if (fds[1].revents)
   {
-    if (stderr_fd.read(_stderr_buffer) == true)
+    if (fds[1].revents & POLLRDNORM)
     {
-      data_was_read= true;
+      if (stderr_fd.read(_stderr_buffer) == true)
+      {
+        data_was_read= true;
+      }
+    }
+
+    if (fds[1].revents & (POLLERR | POLLHUP | POLLNVAL))
+    {
+      stderr_fd.close();
+
+      if (fds[1].revents & POLLERR)
+      {
+        Error << "getsockopt(stderr)";
+      }
     }
   }
 
   return data_was_read;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunreachable-code"
 Application::error_t Application::join()
 {
-  pid_t waited_pid= waitpid(_pid, &_status, WUNTRACED);
+  pid_t waited_pid= waitpid(_pid, &_status, 0);
   slurp();
   if (waited_pid == _pid and WIFEXITED(_status) == false)
   {
@@ -505,6 +533,7 @@ Application::error_t Application::join()
 
   return _app_exit_state;
 }
+#pragma GCC diagnostic pop
 
 void Application::add_long_option(const std::string& name, const std::string& option_value)
 {
@@ -544,6 +573,25 @@ int Application::Pipe::Pipe::fd()
   }
 
   return _pipe_fd[WRITE]; // STDIN_FILENO
+}
+
+void Application::Pipe::Pipe::close()
+{
+  if (_std_fd == STDOUT_FILENO)
+  {
+    ::close(_pipe_fd[READ]);
+    _pipe_fd[READ]= -1;
+  }
+  else if (_std_fd == STDERR_FILENO)
+  {
+    ::close(_pipe_fd[READ]);
+    _pipe_fd[READ]= -1;
+  }
+  else
+  {
+    ::close(_pipe_fd[WRITE]);
+    _pipe_fd[WRITE]= -1;
+  }
 }
 
 
@@ -596,7 +644,7 @@ void Application::Pipe::nonblock()
   if (flags == -1)
   {
     Error << "fcntl(F_GETFL) " << strerror(errno);
-    throw strerror(errno);
+    throw std::runtime_error(strerror(errno));
   }
 
   int rval;
@@ -608,7 +656,7 @@ void Application::Pipe::nonblock()
   if (rval == -1)
   {
     Error << "fcntl(F_SETFL) " << strerror(errno);
-    throw strerror(errno);
+    throw std::runtime_error(strerror(errno));
   }
 }
 
@@ -649,7 +697,7 @@ void Application::Pipe::cloexec()
       if (flags == -1)
       {
         Error << "fcntl(F_GETFD) " << strerror(errno);
-        throw strerror(errno);
+        throw std::runtime_error(strerror(errno));
       }
 
       int rval;
@@ -661,7 +709,7 @@ void Application::Pipe::cloexec()
       if (rval == -1)
       {
         Error << "fcntl(F_SETFD) " << strerror(errno);
-        throw strerror(errno);
+        throw std::runtime_error(strerror(errno));
       }
     }
   }
@@ -731,13 +779,26 @@ void Application::create_argv(const char *args[])
     vchar::append(built_argv, "--leak-check=yes");
 #if 0
     vchar::append(built_argv, "--show-reachable=yes"));
-#endif
     vchar::append(built_argv, "--track-fds=yes");
+#endif
 #if 0
     built_argv[x++]= strdup("--track-origin=yes");
 #endif
     vchar::append(built_argv, "--malloc-fill=A5");
     vchar::append(built_argv, "--free-fill=DE");
+    vchar::append(built_argv, "--xml=yes");
+    if (getenv("VALGRIND_HOME"))
+    {
+      libtest::vchar_t buffer;
+      buffer.resize(1024);
+      int length= snprintf(&buffer[0], buffer.size(), "--xml-file=%s/cmd-%%p.xml", getenv("VALGRIND_HOME"));
+      fatal_assert(length > 0 and size_t(length) < buffer.size());
+      vchar::append(built_argv, &buffer[0]);
+    }
+    else
+    {
+      vchar::append(built_argv, "--xml-file=valgrind-cmd-%p.xml");
+    }
 
     std::string log_file= create_tmpfile("valgrind");
     libtest::vchar_t buffer;

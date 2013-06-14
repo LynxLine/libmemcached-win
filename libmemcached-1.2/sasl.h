@@ -38,9 +38,9 @@
 #pragma once
 
 #if defined(LIBMEMCACHED_WITH_SASL_SUPPORT) && LIBMEMCACHED_WITH_SASL_SUPPORT
-#include <sasl/sasl.h>
+# include <sasl/sasl.h>
 #else
-#define sasl_callback_t void
+# define sasl_callback_t void
 #endif
 
 #ifdef __cplusplus

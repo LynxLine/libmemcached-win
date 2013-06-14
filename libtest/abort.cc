@@ -36,6 +36,8 @@
 
 #include <cstdlib>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunreachable-code"
 int main(void)
 {
   if (1)
@@ -45,3 +47,4 @@ int main(void)
 
   return 0;
 }
+#pragma GCC diagnostic pop

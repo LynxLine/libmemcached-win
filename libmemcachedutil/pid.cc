@@ -105,7 +105,7 @@ pid_t libmemcached_util_getpid2(const char *hostname, in_port_t port, const char
   if (not ret)
     ret= &unused;
 
-  if (LIBMEMCACHED_WITH_SASL_SUPPORT == 0)
+  if (libmemcached_has_feature(LIBMEMCACHED_FEATURE_HAS_SASL) == false)
   {
     *ret= MEMCACHED_NOT_SUPPORTED;
     return pid;

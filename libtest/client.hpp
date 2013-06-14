@@ -36,6 +36,10 @@
 
 #pragma once
 
+#if defined(HAVE_CYASSL) && HAVE_CYASSL
+# include <cyassl/ssl.h>
+#endif
+
 namespace libtest {
 
 class SimpleClient {
@@ -49,7 +53,9 @@ public:
   bool response(std::string&);
   bool response(libtest::vchar_t&);
 
+private:
   bool is_valid();
+public:
 
   const std::string& error() const
   {
@@ -61,20 +67,45 @@ public:
     return _error.size() ? true : false;
   }
 
+  const char* error_file() const
+  {
+    return _error_file;
+  }
+
+  int error_line() const
+  {
+    return _error_line;
+  }
+
+private:
+  void free_addrinfo()
+  {
+    freeaddrinfo(_ai);
+    _ai= NULL;
+  }
+
 private: // Methods
+  void error(const char* file, int line, const std::string& error_);
   void close_socket();
   bool instance_connect();
   struct addrinfo* lookup();
   bool message(const char* ptr, const size_t len);
   bool ready(int event_);
+  void init_ssl();
 
 private:
   bool _is_connected;
+  bool _is_ssl;
   std::string _hostname;
   in_port_t _port;
   int sock_fd;
   std::string _error;
+  const char* _error_file;
+  int _error_line;
   int requested_message;
+  struct CYASSL_CTX* _ctx_ssl;
+  struct CYASSL* _ssl;
+  struct addrinfo *_ai;
 };
 
 } // namespace libtest

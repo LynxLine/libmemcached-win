@@ -47,7 +47,7 @@ static void *world_create(libtest::server_startup_st& servers, test_return_t& er
 
   if (servers.sasl())
   {
-    SKIP_UNLESS(libtest::has_libmemcached_sasl());
+    SKIP_UNLESS(libmemcached_has_feature(LIBMEMCACHED_FEATURE_HAS_SASL));
 
     // Assume we are running under valgrind, and bail
     if (getenv("TESTS_ENVIRONMENT"))

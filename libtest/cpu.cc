@@ -2,7 +2,7 @@
  *
  *  Data Differential YATL (i.e. libtest)  library
  *
- *  Copyright (C) 2012 Data Differential, http://datadifferential.com/
+ *  Copyright (C) 2012-2013 Data Differential, http://datadifferential.com/
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are
@@ -34,8 +34,11 @@
  *
  */
 
-#include "libtest/yatlcon.h"
-#include <libtest/common.h>
+#ifdef HAVE_CONFIG_H
+# include "libtest/yatlcon.h"
+#endif
+
+#include "libtest/cpu.hpp"
 
 #include <unistd.h>
 
@@ -47,23 +50,21 @@
 
 namespace libtest {
 
-size_t number_of_cpus()
+uint32_t number_of_cpus()
 {
-  size_t number_of_cpu= 1;
-#if defined(TARGET_OS_LINUX) && TARGET_OS_LINUX
+  uint32_t number_of_cpu= 1;
+#ifdef linux 
   number_of_cpu= sysconf(_SC_NPROCESSORS_ONLN);
 #elif defined(HAVE_SYS_SYSCTL_H) && defined(CTL_HW) && defined(HW_NCPU) && defined(HW_AVAILCPU) && defined(HW_NCPU)
   int mib[4];
   size_t len= sizeof(number_of_cpu); 
 
   /* set the mib for hw.ncpu */
-  mib[0] = CTL_HW;
-  mib[1] = HW_AVAILCPU;  // alternatively, try HW_NCPU;
+  mib[0]= CTL_HW;
+  mib[1]= HW_AVAILCPU;  // alternatively, try HW_NCPU;
 
   /* get the number of CPUs from the system */
-  sysctl(mib, 2, &number_of_cpu, &len, NULL, 0);
-
-  if (number_of_cpu < 1) 
+  if (sysctl(mib, 2, &number_of_cpu, &len, NULL, 0) == -1)
   {
     mib[1]= HW_NCPU;
     sysctl(mib, 2, &number_of_cpu, &len, NULL, 0 );

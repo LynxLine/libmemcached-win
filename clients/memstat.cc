@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
   memcached_return_t rc= memcached_server_push(memc, servers);
   memcached_server_list_free(servers);
 
-  if (opt_username and LIBMEMCACHED_WITH_SASL_SUPPORT == 0)
+  if (opt_username and libmemcached_has_feature(LIBMEMCACHED_FEATURE_HAS_SASL) == false)
   {
     memcached_free(memc);
     std::cerr << "--username was supplied, but binary was not built with SASL support." << std::endl;

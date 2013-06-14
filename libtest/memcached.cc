@@ -38,9 +38,6 @@
 
 #include "libtest/common.h"
 
-#include <libmemcached-1.2/memcached.h>
-#include <libmemcachedutil-1.2/util.h>
-
 #include <cassert>
 #include <cerrno>
 #include <cstdio>
@@ -183,6 +180,11 @@ public:
   bool broken_socket_cleanup()
   {
     return true;
+  }
+
+  bool is_valgrind() const
+  {
+    return false;
   }
 
   // Memcached's pidfile is broken

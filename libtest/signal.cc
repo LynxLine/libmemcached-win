@@ -88,7 +88,8 @@ void SignalThread::post()
 
 void SignalThread::test()
 {
-  assert(magic_memory == MAGIC_MEMORY);
+  fatal_assert(magic_memory == MAGIC_MEMORY);
+
   if (bool(getenv("LIBTEST_IN_GDB")) == false)
   {
     assert(sigismember(&set, SIGALRM));

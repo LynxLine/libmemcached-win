@@ -1,8 +1,8 @@
 /*  vim:expandtab:shiftwidth=2:tabstop=2:smarttab:
+ * 
+ *  Libmemcached library
  *
- *  Data Differential YATL (i.e. libtest)  library
- *
- *  Copyright (C) 2012 Data Differential, http://datadifferential.com/
+ *  Copyright (C) 2013 Data Differential, http://datadifferential.com/
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are
@@ -34,38 +34,4 @@
  *
  */
 
-#include "libtest/yatlcon.h"
-#include <libtest/common.h>
-
-
-namespace libtest {
-
-bool test_is_local()
-{
-  return (getenv("LIBTEST_LOCAL"));
-}
-
-static bool _is_massive= false;
-void is_massive(bool arg)
-{
-  _is_massive= arg;
-}
-
-bool is_massive()
-{
-  return _is_massive;
-}
-
-static bool _is_ssl= false;
-void is_ssl(bool arg)
-{
-  _is_ssl= arg;
-}
-
-bool is_ssl()
-{
-  return _is_ssl;
-}
-
-} // namespace libtest
-
+#pragma once

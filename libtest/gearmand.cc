@@ -79,9 +79,14 @@ public:
     std::string response;
     bool ret= client.send_message("version", response);
 
+    if (ret == false)
+    {
+      ASSERT_TRUE_(client.is_error(), "client.send_message() failed but no error was set");
+    }
+
     if (client.is_error())
     {
-      error(client.error());
+      error(client.error_file(), client.error_line(), client.error());
     }
 
     return ret;
@@ -140,6 +145,12 @@ bool Gearmand::build()
   }
 
   add_option("--listen=localhost");
+
+
+  if (is_ssl())
+  {
+    add_option("--ssl");
+  }
 
   return true;
 }
