@@ -753,12 +753,12 @@ static void ms_print_memslap_stats(struct timeval *start_time,
 
   pos+= snprintf(pos,
                  sizeof(buf) - (size_t)(pos -buf),
-                 "written_bytes: %lu\n",
-                 (unsigned long) ms_stats.bytes_written);
+                 "written_bytes: %llu\n",
+                 (unsigned long long) ms_stats.bytes_written);
   pos+= snprintf(pos,
                  sizeof(buf) - (size_t)(pos -buf),
-                 "read_bytes: %lu\n",
-                 (unsigned long) ms_stats.bytes_read);
+                 "read_bytes: %llu\n",
+                 (unsigned long long) ms_stats.bytes_read);
   pos+= snprintf(pos,
                  sizeof(buf) - (size_t)(pos -buf),
                  "object_bytes: %lu\n",

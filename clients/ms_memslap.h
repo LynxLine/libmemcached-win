@@ -72,9 +72,9 @@ typedef struct statistic
 typedef struct stats
 {
   volatile uint32_t active_conns;   /* active connections */
-  size_t bytes_read;              /* read bytes */
-  size_t bytes_written;           /* written bytes */
-  size_t obj_bytes;               /* object bytes */
+  uint64_t bytes_read;            /* read bytes */
+  uint64_t bytes_written;         /* written bytes */
+  uint64_t obj_bytes;             /* object bytes */
   size_t pre_cmd_get;             /* previous total get command count */
   size_t pre_cmd_set;             /* previous total set command count */
   size_t cmd_get;                 /* current total get command count */
