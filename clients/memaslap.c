@@ -799,7 +799,6 @@ static void ms_print_memslap_stats(struct timeval *start_time,
                           ms_stats.bytes_written
                           + ms_stats.bytes_read) / 1024 / 1024
                  / ((double)time_diff / 1000000));
-  assert(pos <= buf);
 
   fprintf(stdout, "%s", buf);
   fflush(stdout);
