@@ -97,6 +97,7 @@ clients_memaslap_SOURCES+= clients/generator.cc clients/execute.cc
 clients_memaslap_LDADD=
 clients_memaslap_LDADD+= @LIBEVENT_LIB@
 clients_memaslap_LDADD+= $(CLIENTS_LDADDS)
+clients_memaslap_LDADD+= @PTHREAD_LIBS@
 
 clients_memcapable_SOURCES=
 clients_memcapable_SOURCES+= clients/memcapable.cc
