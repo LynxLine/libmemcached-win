@@ -11,7 +11,7 @@
 
 #include "mem_config.h"
 
-#include <libmemcached/memcached.h>
+#include <libmemcached-1.2/memcached.h>
 
 #include <ctype.h>
 #include <inttypes.h>
