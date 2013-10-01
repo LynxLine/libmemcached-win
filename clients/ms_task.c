@@ -690,8 +690,8 @@ static void ms_multi_getset_task_sch(ms_conn_t *c)
  */
 int64_t ms_time_diff(struct timeval *start_time, struct timeval *end_time)
 {
-  int64_t endtime= end_time->tv_sec * 1000000 + end_time->tv_usec;
-  int64_t starttime= start_time->tv_sec * 1000000 + start_time->tv_usec;
+  int64_t endtime= ((int64_t)end_time->tv_sec) * 1000000 + end_time->tv_usec;
+  int64_t starttime= ((int64_t)start_time->tv_sec) * 1000000 + start_time->tv_usec;
 
   assert(endtime >= starttime);
 
