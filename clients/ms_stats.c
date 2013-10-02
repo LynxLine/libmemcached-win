@@ -186,6 +186,8 @@ void ms_dump_stats(ms_stat_t *stat)
     }
   }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunsafe-loop-optimizations"
   for (int i= min_non_zero; i <= max_non_zero; i++)
   {
     if ((i % 4) == 0)
@@ -194,6 +196,7 @@ void ms_dump_stats(ms_stat_t *stat)
     }
     printf("   %6" PRIu64 , stat->dist[i]);
   }
+#pragma GCC diagnostic pop
 
   printf("\n\n");
 } /* ms_dump_stats */
