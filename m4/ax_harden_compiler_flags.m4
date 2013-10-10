@@ -162,7 +162,6 @@ AC_DEFUN([_HARDEN_CC_COMPILER_FLAGS],
          _APPEND_COMPILE_FLAGS_ERROR([-Wthis-test-should-fail])
 # Anything below this comment please keep sorted.
 # _APPEND_COMPILE_FLAGS_ERROR([-Wmissing-format-attribute])
-          _APPEND_COMPILE_FLAGS_ERROR([-Wunsuffixed-float-constants])
           _APPEND_COMPILE_FLAGS_ERROR([-Wjump-misses-init])
           _APPEND_COMPILE_FLAGS_ERROR([-Wno-attributes])
           _APPEND_COMPILE_FLAGS_ERROR([-Waddress])
