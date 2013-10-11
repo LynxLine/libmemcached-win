@@ -99,7 +99,7 @@ static bool repack_input_buffer(memcached_instance_st* instance)
           case EWOULDBLOCK:
 #endif
           case EAGAIN:
-#ifdef TARGET_OS_LINUX
+#ifdef __linux
           case ERESTART:
 #endif
             break; // No IO is fine, we can just move on
@@ -265,7 +265,7 @@ static memcached_return_t io_wait(memcached_instance_st* instance,
     assert_msg(active_fd == -1 , "poll() returned an unexpected value");
     switch (local_errno)
     {
-#ifdef TARGET_OS_LINUX
+#ifdef __linux
     case ERESTART:
 #endif
     case EINTR:
@@ -412,6 +412,11 @@ memcached_return_t memcached_io_wait_for_write(memcached_instance_st* instance)
   return io_wait(instance, MEM_WRITE);
 }
 
+memcached_return_t memcached_io_wait_for_read(memcached_instance_st* instance)
+{
+  return io_wait(instance, MEM_READ);
+}
+
 static memcached_return_t _io_fill(memcached_instance_st* instance)
 {
   ssize_t data_read;
@@ -430,7 +435,7 @@ static memcached_return_t _io_fill(memcached_instance_st* instance)
       case EWOULDBLOCK:
 #endif
       case EAGAIN:
-#ifdef TARGET_OS_LINUX
+#ifdef __linux
       case ERESTART:
 #endif
         {
@@ -568,7 +573,7 @@ memcached_return_t memcached_io_slurp(memcached_instance_st* instance)
       case EWOULDBLOCK:
 #endif
       case EAGAIN:
-#ifdef TARGET_OS_LINUX
+#ifdef __linux
       case ERESTART:
 #endif
         if (memcached_success(io_wait(instance, MEM_READ)))

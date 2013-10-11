@@ -57,8 +57,13 @@ static void auto_response(memcached_instance_st* instance, const bool reply,  me
     assert(memcached_last_error(instance->root) != MEMCACHED_SUCCESS);
     *value= UINT64_MAX;
   }
+  else if (memcached_failed(rc))
+  {
+    *value= UINT64_MAX;
+  }
   else
   {
+    assert(memcached_last_error(instance->root) != MEMCACHED_NOTFOUND);
     *value= instance->root->result.impl()->numeric_value;
   }
 }

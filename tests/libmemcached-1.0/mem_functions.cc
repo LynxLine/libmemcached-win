@@ -994,6 +994,7 @@ test_return_t bad_key_test(memcached_st *memc)
   test_compare(MEMCACHED_SUCCESS,
                memcached_behavior_set(memc_clone, MEMCACHED_BEHAVIOR_VERIFY_KEY, true));
   test_compare(query_id, memcached_query_id(memc_clone)); // We should not increase the query_id for memcached_behavior_set()
+  ASSERT_TRUE(memcached_behavior_get(memc_clone, MEMCACHED_BEHAVIOR_VERIFY_KEY));
 
   /* All keys are valid in the binary protocol (except for length) */
   if (memcached_behavior_get(memc_clone, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL) == false)
@@ -1295,24 +1296,39 @@ test_return_t increment_test(memcached_st *memc)
   return TEST_SUCCESS;
 }
 
-test_return_t increment_with_initial_test(memcached_st *memc)
+static test_return_t __increment_with_initial_test(memcached_st *memc, uint64_t initial)
 {
-  test_skip(true, memcached_behavior_get(memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL));
-
   uint64_t new_number;
-  uint64_t initial= 0;
 
   test_compare(MEMCACHED_SUCCESS, memcached_flush_buffers(memc));
 
-  test_compare(MEMCACHED_SUCCESS, 
-               memcached_increment_with_initial(memc, test_literal_param("number"), 1, initial, 0, &new_number));
-  test_compare(new_number, initial);
+  if (memcached_behavior_get(memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL))
+  {
+    test_compare(MEMCACHED_SUCCESS, 
+                 memcached_increment_with_initial(memc, test_literal_param("number"), 1, initial, 0, &new_number));
+    test_compare(new_number, initial);
 
-  test_compare(MEMCACHED_SUCCESS, 
-               memcached_increment_with_initial(memc, test_literal_param("number"), 1, initial, 0, &new_number));
-  test_compare(new_number, (initial +1));
+    test_compare(MEMCACHED_SUCCESS, 
+                 memcached_increment_with_initial(memc, test_literal_param("number"), 1, initial, 0, &new_number));
+    test_compare(new_number, (initial +1));
+  }
+  else
+  {
+    test_compare(MEMCACHED_INVALID_ARGUMENTS, 
+                 memcached_increment_with_initial(memc, test_literal_param("number"), 1, initial, 0, &new_number));
+  }
 
   return TEST_SUCCESS;
+}
+
+test_return_t increment_with_initial_test(memcached_st *memc)
+{
+  return __increment_with_initial_test(memc, 0);
+}
+
+test_return_t increment_with_initial_999_test(memcached_st *memc)
+{
+  return __increment_with_initial_test(memc, 999);
 }
 
 test_return_t decrement_test(memcached_st *memc)
@@ -1342,11 +1358,9 @@ test_return_t decrement_test(memcached_st *memc)
   return TEST_SUCCESS;
 }
 
-test_return_t decrement_with_initial_test(memcached_st *memc)
+static test_return_t __decrement_with_initial_test(memcached_st *memc, uint64_t initial)
 {
   test_skip(true, memcached_behavior_get(memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL));
-
-  uint64_t initial= 3;
 
   test_compare(MEMCACHED_SUCCESS, memcached_flush_buffers(memc));
 
@@ -1366,6 +1380,16 @@ test_return_t decrement_with_initial_test(memcached_st *memc)
   test_compare(new_number, (initial - 1));
 
   return TEST_SUCCESS;
+}
+
+test_return_t decrement_with_initial_test(memcached_st *memc)
+{
+  return __decrement_with_initial_test(memc, 3);
+}
+
+test_return_t decrement_with_initial_999_test(memcached_st *memc)
+{
+  return __decrement_with_initial_test(memc, 999);
 }
 
 test_return_t increment_by_key_test(memcached_st *memc)
@@ -1399,24 +1423,32 @@ test_return_t increment_by_key_test(memcached_st *memc)
 
 test_return_t increment_with_initial_by_key_test(memcached_st *memc)
 {
-  test_skip(true, memcached_behavior_get(memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL));
-
   uint64_t new_number;
   const char *master_key= "foo";
   const char *key= "number";
   uint64_t initial= 0;
 
-  test_compare(MEMCACHED_SUCCESS,
-               memcached_increment_with_initial_by_key(memc, master_key, strlen(master_key),
-                                                       key, strlen(key),
-                                                       1, initial, 0, &new_number));
-  test_compare(new_number, initial);
+  if (memcached_behavior_get(memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL))
+  {
+    test_compare(MEMCACHED_SUCCESS,
+                 memcached_increment_with_initial_by_key(memc, master_key, strlen(master_key),
+                                                         key, strlen(key),
+                                                         1, initial, 0, &new_number));
+    test_compare(new_number, initial);
 
-  test_compare(MEMCACHED_SUCCESS,
-               memcached_increment_with_initial_by_key(memc, master_key, strlen(master_key),
-                                                       key, strlen(key),
-                                                       1, initial, 0, &new_number));
-  test_compare(new_number, (initial +1));
+    test_compare(MEMCACHED_SUCCESS,
+                 memcached_increment_with_initial_by_key(memc, master_key, strlen(master_key),
+                                                         key, strlen(key),
+                                                         1, initial, 0, &new_number));
+    test_compare(new_number, (initial +1));
+  }
+  else
+  {
+    test_compare(MEMCACHED_INVALID_ARGUMENTS,
+                 memcached_increment_with_initial_by_key(memc, master_key, strlen(master_key),
+                                                         key, strlen(key),
+                                                         1, initial, 0, &new_number));
+  }
 
   return TEST_SUCCESS;
 }
@@ -1457,19 +1489,30 @@ test_return_t decrement_with_initial_by_key_test(memcached_st *memc)
   uint64_t new_number;
   uint64_t initial= 3;
 
-  test_compare(MEMCACHED_SUCCESS,
-               memcached_decrement_with_initial_by_key(memc,
-                                                       test_literal_param("foo"),
-                                                       test_literal_param("number"),
-                                                       1, initial, 0, &new_number));
-  test_compare(new_number, initial);
+  if (memcached_behavior_get(memc, MEMCACHED_BEHAVIOR_BINARY_PROTOCOL))
+  {
+    test_compare(MEMCACHED_SUCCESS,
+                 memcached_decrement_with_initial_by_key(memc,
+                                                         test_literal_param("foo"),
+                                                         test_literal_param("number"),
+                                                         1, initial, 0, &new_number));
+    test_compare(new_number, initial);
 
-  test_compare(MEMCACHED_SUCCESS,
-               memcached_decrement_with_initial_by_key(memc,
-                                                       test_literal_param("foo"),
-                                                       test_literal_param("number"),
-                                                       1, initial, 0, &new_number));
-  test_compare(new_number, (initial - 1));
+    test_compare(MEMCACHED_SUCCESS,
+                 memcached_decrement_with_initial_by_key(memc,
+                                                         test_literal_param("foo"),
+                                                         test_literal_param("number"),
+                                                         1, initial, 0, &new_number));
+    test_compare(new_number, (initial - 1));
+  }
+  else
+  {
+    test_compare(MEMCACHED_INVALID_ARGUMENTS,
+                 memcached_decrement_with_initial_by_key(memc,
+                                                         test_literal_param("foo"),
+                                                         test_literal_param("number"),
+                                                         1, initial, 0, &new_number));
+  }
 
   return TEST_SUCCESS;
 }
@@ -3040,7 +3083,7 @@ test_return_t selection_of_namespace_tests(memcached_st *memc)
   const char *key= "mine";
   char *value;
 
-  /* Make sure be default none exists */
+  /* Make sure by default none exists */
   value= (char*)memcached_callback_get(memc, MEMCACHED_CALLBACK_NAMESPACE, &rc);
   test_null(value);
   test_compare_got(MEMCACHED_SUCCESS, rc, memcached_strerror(NULL, rc));
@@ -3051,7 +3094,7 @@ test_return_t selection_of_namespace_tests(memcached_st *memc)
 
   value= (char*)memcached_callback_get(memc, MEMCACHED_CALLBACK_NAMESPACE, &rc);
   test_true(value);
-  test_memcmp(value, key, 4);
+  test_memcmp(value, key, strlen(key));
   test_compare_got(MEMCACHED_SUCCESS, rc, memcached_strerror(NULL, rc));
 
   /* Test that we can turn it off */
@@ -3069,7 +3112,7 @@ test_return_t selection_of_namespace_tests(memcached_st *memc)
   value= (char *)memcached_callback_get(memc, MEMCACHED_CALLBACK_NAMESPACE, &rc);
   test_true(value);
   test_compare_got(MEMCACHED_SUCCESS, rc, memcached_strerror(NULL, rc));
-  test_memcmp(value, key, 4);
+  test_memcmp(value, key, strlen(key));
 
   /* Set to Zero, and then Set to something too large */
   {
@@ -3079,9 +3122,7 @@ test_return_t selection_of_namespace_tests(memcached_st *memc)
     test_compare(MEMCACHED_SUCCESS,
                  memcached_callback_set(memc, MEMCACHED_CALLBACK_NAMESPACE, NULL));
 
-    value= (char*)memcached_callback_get(memc, MEMCACHED_CALLBACK_NAMESPACE, &rc);
-    test_null(value);
-    test_compare(MEMCACHED_SUCCESS, rc);
+    ASSERT_NULL_(memcached_callback_get(memc, MEMCACHED_CALLBACK_NAMESPACE, &rc), "Setting namespace to NULL did not work");
 
     /* Test a long key for failure */
     /* TODO, extend test to determine based on setting, what result should be */
@@ -3109,11 +3150,10 @@ test_return_t set_namespace(memcached_st *memc)
 {
   memcached_return_t rc;
   const char *key= "mine";
-  char *value;
 
   // Make sure we default to a null namespace
-  value= (char*)memcached_callback_get(memc, MEMCACHED_CALLBACK_NAMESPACE, &rc);
-  test_null(value);
+  char* value= (char*)memcached_callback_get(memc, MEMCACHED_CALLBACK_NAMESPACE, &rc);
+  ASSERT_NULL_(value, "memc had a value for namespace when none should exist");
   test_compare_got(MEMCACHED_SUCCESS, rc, memcached_strerror(NULL, rc));
 
   /* Test a clean set */
@@ -3121,8 +3161,8 @@ test_return_t set_namespace(memcached_st *memc)
                memcached_callback_set(memc, MEMCACHED_CALLBACK_NAMESPACE, (void *)key));
 
   value= (char*)memcached_callback_get(memc, MEMCACHED_CALLBACK_NAMESPACE, &rc);
-  test_true(value);
-  test_memcmp(value, key, 4);
+  ASSERT_TRUE(value);
+  test_memcmp(value, key, strlen(key));
   test_compare_got(MEMCACHED_SUCCESS, rc, memcached_strerror(NULL, rc));
 
   return TEST_SUCCESS;

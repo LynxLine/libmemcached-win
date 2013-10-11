@@ -2,7 +2,7 @@
  *
  *  Data Differential YATL (i.e. libtest)  library
  *
- *  Copyright (C) 2012 Data Differential, http://datadifferential.com/
+ *  Copyright (C) 2012-2013 Data Differential, http://datadifferential.com/
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are
@@ -43,8 +43,11 @@
 #include <cstring>
 #include <ctime>
 #include <fnmatch.h>
-#include <fstream>
 #include <iostream>
+#ifdef HAVE_STRINGS_H
+# include <strings.h>
+#endif
+#include <fstream>
 #include <memory>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -113,7 +116,7 @@ int main(int argc, char *argv[], char* environ_[])
     Valgrind does not currently work reliably, or sometimes at all, on OSX
     - Fri Jun 15 11:24:07 EDT 2012
   */
-#if defined(TARGET_OS_OSX) && TARGET_OS_OSX
+#if defined(__APPLE__) && __APPLE__
   if (valgrind_is_caller())
   {
     return EXIT_SKIP;

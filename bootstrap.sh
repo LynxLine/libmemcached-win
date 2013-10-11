@@ -420,10 +420,6 @@ run_configure ()
   ret=1;
   # If we are executing on OSX use CLANG, otherwise only use it if we find it in the ENV
   case $HOST_OS in
-    *-darwin-*)
-      run CC=clang CXX=clang++ $top_srcdir/configure "$BUILD_CONFIGURE_ARG" || die "Cannot execute CC=clang CXX=clang++ configure $BUILD_CONFIGURE_ARG"
-      ret=$?
-      ;;
     rhel-5*)
       command_exists 'gcc44' || die "Could not locate gcc44"
       run CC=gcc44 CXX=gcc44 $top_srcdir/configure "$BUILD_CONFIGURE_ARG" || die "Cannot execute CC=gcc44 CXX=gcc44 configure $BUILD_CONFIGURE_ARG"
@@ -793,18 +789,14 @@ make_for_clang_analyzer ()
 
   CC=clang CXX=clang++
   export CC CXX
+  CONFIGURE='scan-build ./configure'
   CONFIGURE_ARGS='--enable-debug'
 
-  make_skeleton
-  ret=$?
-
-  make_target 'clean' 'warn'
+  run_configure
 
   scan-build -o clang-html make -j4 -k
 
   restore_BUILD
-
-  return $ret
 }
 
 # If we are locally testing, we should make sure the environment is setup correctly
@@ -1010,6 +1002,9 @@ make_rpm ()
 {
   if command_exists 'rpmbuild'; then
     if [ -f 'rpm.am' -o -d 'rpm' ]; then
+      mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+      mkdir -p ~/rpmbuild/RPMS/{i386,i486,i586,i686,noarch,athlon}
+
       run_configure_if_required
       make_target 'rpm'
 
@@ -1507,6 +1502,9 @@ check_make_target()
 
 execute_job ()
 {
+  # We should always have a target by this point
+  assert MAKE_TARGET
+
   determine_target_platform
 
   determine_vcs
@@ -1516,10 +1514,6 @@ execute_job ()
   require_libtoolise
   if ! autoreconf_setup; then
     return 1
-  fi
-
-  if [ -z "$MAKE_TARGET" ]; then
-    MAKE_TARGET="make_default"
   fi
 
   if $print_setup_opt -o  $debug; then
@@ -1540,9 +1534,6 @@ execute_job ()
   if [[ -n "$PREFIX" ]]; then 
     PREFIX_ARG="--prefix=$PREFIX"
   fi
-
-  # We should always have a target by this point
-  assert MAKE_TARGET
 
   if $CLEAN_OPTION; then
     make_maintainer_clean
@@ -1761,6 +1752,13 @@ main ()
       fi
     fi
   fi
+
+  if [ -z "$MAKE_TARGET" ]; then
+    MAKE_TARGET="make_default"
+  fi
+
+  # We should always have a target by this point
+  assert MAKE_TARGET
 
   execute_job
   local ret=$?
