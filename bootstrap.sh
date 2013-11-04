@@ -223,8 +223,16 @@ set_VENDOR_RELEASE ()
           echo "mountain_lion"
           VENDOR_RELEASE='mountain_lion'
           ;;
+        10.9)
+          echo "mavericks"
+          VENDOR_RELEASE='mavericks'
+          ;;
+        10.9.*)
+          echo "mavericks"
+          VENDOR_RELEASE='mavericks'
+          ;;
         *)
-          echo $VENDOR_RELEASE
+          echo $release
           VENDOR_RELEASE='unknown'
           ;;
       esac
