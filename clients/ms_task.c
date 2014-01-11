@@ -972,6 +972,12 @@ static void ms_update_stat_result(ms_conn_t *c)
 
   gettimeofday(&c->end_time, NULL);
   uint64_t time_diff= (uint64_t)ms_time_diff(&c->start_time, &c->end_time);
+  if ((c->throttle_time.tv_usec != 0)
+      || (c->throttle_time.tv_sec != 0))
+  {
+    uint64_t throttle_time = (uint64_t)ms_time_diff(&c->throttle_time, &c->end_time);
+    time_diff -= throttle_time;
+  }
 
   pthread_mutex_lock(&ms_statistic.stat_mutex);
 

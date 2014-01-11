@@ -192,6 +192,7 @@ typedef struct conn
   /* response time statistic and time out control */
   struct timeval start_time;        /* start time of current operation(s) */
   struct timeval end_time;          /* end time of current operation(s) */
+  struct timeval throttle_time;     /* start time where we started throttling */
 
   /* Binary protocol stuff */
   protocol_binary_response_header binary_header;    /* local temporary binary header */
