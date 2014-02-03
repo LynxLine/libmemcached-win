@@ -7,17 +7,21 @@
 # the COPYING file in this directory for full text.
 
 m4_include([version.m4])
+AC_PREREQ([2.61])
 AC_INIT([libmemcached],VERSION_NUMBER,[http://libmemcached.org/])
+
+# Setup the compilers early on
+AC_PROG_CC([cc gcc clang])
+AC_PROG_CXX([c++ g++ clang++])
+
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 
-AC_CANONICAL_TARGET
+AC_CANONICAL_HOST
 AC_ARG_PROGRAM
 AC_USE_SYSTEM_EXTENSIONS
 
 AM_INIT_AUTOMAKE([1.11 color-tests -Wno-portability subdir-objects foreign tar-ustar])
-
-AC_PREREQ([2.61])
 
 AC_CONFIG_HEADERS([mem_config.h:mem_config.in])dnl Keep filename to 8.3 for MS-DOS.
 AC_SUBST([AUTOHEADER_FILE],[mem_config.h])
@@ -47,9 +51,12 @@ AX_HEX_VERSION([LIBHASHKIT],[1.0.0])
 m4_include([libhashkit/include.m4])
 
 LT_PREREQ([2.2])
-LT_INIT
+LT_INIT([dlopen])
 LT_LANG([C++])
 LT_LIB_M
+
+AC_SUBST([lt_cv_dlopen_libs])
+
 
 AC_PROG_CC_C99
 AS_IF([test "x${ac_cv_prog_cc_c99}" == "xno"],[AC_MSG_ERROR([No c99 compatible compiler found])])
@@ -57,7 +64,7 @@ AS_IF([test "x${ac_cv_prog_cc_c99}" == "xno"],[AC_MSG_ERROR([No c99 compatible c
 AC_DEFUN([CHECK_CXX0X],[
           AC_LANG_PUSH([C++])
           AX_CHECK_COMPILE_FLAG([-std=c++0x],[
-                                 CXXFLAGS="$CXXFLAGS -std=c++0x"])
+                                 CXX="$CXX -std=c++0x"])
           AC_LANG_POP([C++])
           ])
 CHECK_CXX0X
@@ -65,12 +72,7 @@ CHECK_CXX0X
 AX_ASSERT
 
 AX_PLATFORM
-
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
-
-AX_CXX_HEADER_STDCXX_98
-AS_IF([test "x$ax_cv_cxx_stdcxx_98" = "xno"],
-      [AC_MSG_ERROR([Your system lacks a new enough C++ compiler])])
 
 AC_DEFUN([LIBMEMCACHED_PROTOCOL],
          [AC_ARG_ENABLE([libmemcachedprotocol],
@@ -255,9 +257,6 @@ AC_CHECK_LIB([rt],[clock_gettime],
              [AC_DEFINE([HAVE_CLOCK_GETTIME],[0],[Have clock_gettime])])
 
 
-# Check for the ability to call dlopen (used in libhostile)
-AX_DLOPEN
-
 AC_CHECK_HEADERS([atomic.h])
 AS_IF([test "x$ac_cv_header_atomic_h" = "xyes"],
       [AC_CHECK_FUNCS([atomic_add_64])
@@ -298,8 +297,10 @@ SOCKET_SEND_FLAGS
 AX_UUID_GENERATE_TIME_SAFE
 
 AC_DEFUN([CHECK_FOR_PTHREAD_AND_SASL],
-         [AX_PTHREAD(, [AC_MSG_ERROR([could not find libpthread])])
+         [AC_LANG_PUSH([C++])
+         AX_PTHREAD(, [AC_MSG_ERROR([could not find libpthread])])
          AX_PTHREAD_TIMEDJOIN_NP
+         AC_LANG_POP([C++])
 
          # The sasl functions should only be visible if we build with sasl support
          #

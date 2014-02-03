@@ -38,7 +38,7 @@
 #   LIBTOOLIZE
 #   MAKE
 #   PREFIX
-#   TESTS_ENVIRONMENT
+#   LOG_COMPILER
 #   VERBOSE
 #   WARNINGS
 #
@@ -486,8 +486,8 @@ save_BUILD ()
     die "OLD_MAKE($OLD_MAKE) was set on push, programmer error!"
   fi
 
-  if [[ -n "$OLD_TESTS_ENVIRONMENT" ]]; then
-    die "OLD_TESTS_ENVIRONMENT($OLD_TESTS_ENVIRONMENT) was set on push, programmer error!"
+  if [[ -n "$OLD_LOG_COMPILER" ]]; then
+    die "OLD_LOG_COMPILER($OLD_LOG_COMPILER) was set on push, programmer error!"
   fi
 
   if [[ -n "$CONFIGURE" ]]; then
@@ -502,8 +502,8 @@ save_BUILD ()
     OLD_MAKE=$MAKE
   fi
 
-  if [[ -n "$TESTS_ENVIRONMENT" ]]; then
-    OLD_TESTS_ENVIRONMENT=$TESTS_ENVIRONMENT
+  if [[ -n "$LOG_COMPILER" ]]; then
+    OLD_LOG_COMPILER=$LOG_COMPILER
   fi
 }
 
@@ -525,15 +525,15 @@ restore_BUILD ()
     MAKE=$OLD_MAKE
   fi
 
-  if [[ -n "$OLD_TESTS_ENVIRONMENT" ]]; then
-    TESTS_ENVIRONMENT=$OLD_TESTS_ENVIRONMENT
+  if [[ -n "$OLD_LOG_COMPILER" ]]; then
+    LOG_COMPILER=$OLD_LOG_COMPILER
   fi
 
   OLD_CONFIGURE=
   OLD_CONFIGURE_ARG=
   OLD_PREFIX=
   OLD_MAKE=
-  OLD_TESTS_ENVIRONMENT=
+  OLD_LOG_COMPILER=
 
   export -n CC CXX
 }
@@ -567,9 +567,9 @@ make_valgrind ()
   # If we don't have a configure, then most likely we will be missing libtool
   assert_file 'configure'
   if [[ -x 'libtool' ]]; then
-    TESTS_ENVIRONMENT="./libtool --mode=execute $VALGRIND_COMMAND"
+    LOG_COMPILER="./libtool --mode=execute $VALGRIND_COMMAND"
   else
-    TESTS_ENVIRONMENT="$VALGRIND_COMMAND"
+    LOG_COMPILER="$VALGRIND_COMMAND"
   fi
 
   make_target 'all'
@@ -703,11 +703,11 @@ make_skeleton ()
     else
       if [[ -n "$DISPLAY" ]]; then
         if command_exists 'wine'; then
-          TESTS_ENVIRONMENT='wine'
+          LOG_COMPILER='wine'
         fi
       fi
 
-      if [[ -n "$TESTS_ENVIRONMENT" ]]; then
+      if [[ -n "$LOG_COMPILER" ]]; then
         make_target 'check' 'warn' || warn "$MAKE check failed"
         ret=$?
       fi
@@ -935,9 +935,9 @@ make_gdb ()
     # If we don't have a configure, then most likely we will be missing libtool
     assert_file 'configure'
     if [[ -f 'libtool' ]]; then
-      TESTS_ENVIRONMENT="./libtool --mode=execute $GDB_COMMAND"
+      LOG_COMPILER="./libtool --mode=execute $GDB_COMMAND"
     else
-      TESTS_ENVIRONMENT="$GDB_COMMAND"
+      LOG_COMPILER="$GDB_COMMAND"
     fi
 
     make_target 'check'
@@ -974,9 +974,9 @@ make_target ()
     run_configure
   fi
 
-  if [ -n "$TESTS_ENVIRONMENT" ]; then
+  if [ -n "$LOG_COMPILER" ]; then
     if $verbose; then
-      echo "TESTS_ENVIRONMENT=$TESTS_ENVIRONMENT"
+      echo "LOG_COMPILER=$LOG_COMPILER"
     fi
   fi
 
@@ -1386,16 +1386,16 @@ print_setup ()
     echo "MAKE=$MAKE"
   fi
 
-  if [[ -n "$MAKE_TARGET" ]]; then
-    echo "MAKE_TARGET=$MAKE_TARGET"
+  if [[ -n "$BOOTSTRAP_TARGET" ]]; then
+    echo "BOOTSTRAP_TARGET=$BOOTSTRAP_TARGET"
   fi
 
   if [[ -n "$PREFIX" ]]; then
     echo "PREFIX=$PREFIX"
   fi
 
-  if [[ -n "$TESTS_ENVIRONMENT" ]]; then
-    echo "TESTS_ENVIRONMENT=$TESTS_ENVIRONMENT"
+  if [[ -n "$LOG_COMPILER" ]]; then
+    echo "LOG_COMPILER=$LOG_COMPILER"
   fi
 
   if [[ -n "$VCS_CHECKOUT" ]]; then
@@ -1511,7 +1511,7 @@ check_make_target()
 execute_job ()
 {
   # We should always have a target by this point
-  assert MAKE_TARGET
+  assert BOOTSTRAP_TARGET
 
   determine_target_platform
 
@@ -1535,8 +1535,8 @@ execute_job ()
     fi
   fi
 
-  # Use OLD_TESTS_ENVIRONMENT for tracking the state of the variable
-  local OLD_TESTS_ENVIRONMENT=
+  # Use OLD_LOG_COMPILER for tracking the state of the variable
+  local OLD_LOG_COMPILER=
 
   # Set ENV PREFIX in order to set --prefix for ./configure
   if [[ -n "$PREFIX" ]]; then 
@@ -1547,17 +1547,17 @@ execute_job ()
     make_maintainer_clean
   fi
 
-  local MAKE_TARGET_ARRAY
-  MAKE_TARGET_ARRAY=( $MAKE_TARGET )
+  local BOOTSTRAP_TARGET_ARRAY
+  BOOTSTRAP_TARGET_ARRAY=( $BOOTSTRAP_TARGET )
 
-  for target in "${MAKE_TARGET_ARRAY[@]}"
+  for target in "${BOOTSTRAP_TARGET_ARRAY[@]}"
   do
     # If we are running inside of Jenkins, we want to only run some of the possible tests
     if $jenkins_build_environment; then
       check_make_target $target
       ret=$?
       if [ $ret -ne 0 ]; then
-        die "Unknown MAKE_TARGET option: $target"
+        die "Unknown BOOTSTRAP_TARGET option: $target"
       fi
     fi
 
@@ -1663,7 +1663,7 @@ main ()
   declare -x VCS_CHECKOUT=
 
   # Variables we control globally
-  local -a MAKE_TARGET=
+  local -a BOOTSTRAP_TARGET=
   local CONFIGURE=
   local use_libtool=false
   local verbose=false
@@ -1688,7 +1688,7 @@ main ()
   local OLD_CONFIGURE_ARG=
   local OLD_PREFIX=
   local OLD_MAKE=
-  local OLD_TESTS_ENVIRONMENT=
+  local OLD_LOG_COMPILER=
 
   # If we call autoreconf on the platform or not
   local AUTORECONF_REBUILD_HOST=false
@@ -1726,47 +1726,36 @@ main ()
   local OPT_TARGET=
   parse_command_line_options "$@"
 
-  nassert MAKE_TARGET
+  nassert BOOTSTRAP_TARGET
 
   if [ -n "$OPT_TARGET" ]; then
-    MAKE_TARGET="$OPT_TARGET"
+    BOOTSTRAP_TARGET="$OPT_TARGET"
   fi
 
   # If we are running under Jenkins we predetermine what tests we will run against
-  # This MAKE_TARGET can be overridden by parse_command_line_options based MAKE_TARGET changes.
+  # This BOOTSTRAP_TARGET can be overridden by parse_command_line_options based BOOTSTRAP_TARGET changes.
   # We don't want Jenkins overriding other variables, so we NULL them.
-  if [ -z "$MAKE_TARGET" ]; then
+  if [ -z "$BOOTSTRAP_TARGET" ]; then
     if $jenkins_build_environment; then
       if [[ -n "$JENKINS_TARGET" ]]; then
-        MAKE_TARGET="$JENKINS_TARGET"
+        check_make_target $JENKINS_TARGET
+        if [ $? -eq 0 ]; then
+          BOOTSTRAP_TARGET="$JENKINS_TARGET"
+        else
+          die "label not found: $label"
+        fi
       else
-        if [[ -n "$label" ]]; then
-          check_make_target $label
-          if [ $? -eq 0 ]; then
-            MAKE_TARGET="$label"
-          fi
-        fi
-
-        if [[ -n "$LABEL" ]]; then
-          check_make_target $LABEL
-          if [ $? -eq 0 ]; then
-            MAKE_TARGET="$LABEL"
-          fi
-        fi
-
-        if [ -z "$MAKE_TARGET" ]; then
-          MAKE_TARGET='jenkins'
-        fi
+          BOOTSTRAP_TARGET='jenkins'
       fi
     fi
   fi
 
-  if [ -z "$MAKE_TARGET" ]; then
-    MAKE_TARGET="make_default"
+  if [ -z "$BOOTSTRAP_TARGET" ]; then
+    BOOTSTRAP_TARGET="make_default"
   fi
 
   # We should always have a target by this point
-  assert MAKE_TARGET
+  assert BOOTSTRAP_TARGET
 
   execute_job
   local ret=$?
@@ -1882,7 +1871,7 @@ bootstrap ()
   export LIBTOOLIZE_OPTIONS
   export MAKE
   export PREFIX_ARG
-  export TESTS_ENVIRONMENT
+  export LOG_COMPILER
   export VERBOSE
   export WARNINGS
 
