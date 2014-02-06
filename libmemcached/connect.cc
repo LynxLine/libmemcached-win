@@ -198,7 +198,7 @@ static memcached_return_t set_hostinfo(memcached_instance_st* server)
   struct addrinfo hints;
   memset(&hints, 0, sizeof(struct addrinfo));
 
-  hints.ai_family= AF_INET;
+  hints.ai_family= AF_UNSPEC;
   if (memcached_is_udp(server->root))
   {
     hints.ai_protocol= IPPROTO_UDP;
@@ -715,6 +715,7 @@ static memcached_return_t backoff_handling(memcached_instance_st* server, bool& 
     if (_gettime_success and server->next_retry < curr_time.tv_sec)
     {
       server->state= MEMCACHED_SERVER_STATE_NEW;
+      server->server_timeout_counter= 0;
     }
     else
     {

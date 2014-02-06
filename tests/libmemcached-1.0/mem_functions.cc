@@ -413,6 +413,7 @@ test_return_t clone_test(memcached_st *memc)
     test_true(memc_clone->retry_timeout == memc->retry_timeout);
     test_true(memc_clone->send_size == memc->send_size);
     test_true(memc_clone->server_failure_limit == memc->server_failure_limit);
+    test_true(memc_clone->server_timeout_limit == memc->server_timeout_limit);
     test_true(memc_clone->snd_timeout == memc->snd_timeout);
     test_true(memc_clone->user_data == memc->user_data);
 
@@ -4562,7 +4563,7 @@ test_return_t wrong_failure_counter_two_test(memcached_st *memc)
 
   /* Put a retry timeout to effectively activate failure_limit effect */
   test_compare(MEMCACHED_SUCCESS,
-               memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_RETRY_TIMEOUT, true));
+               memcached_behavior_set(memc, MEMCACHED_BEHAVIOR_RETRY_TIMEOUT, 1));
 
   /* change behavior that triggers memcached_quit()*/
   test_compare(MEMCACHED_SUCCESS,
@@ -4840,6 +4841,28 @@ test_return_t regression_bug_490520(memcached_st *original_memc)
   }
 
   memcached_free(memc);
+
+  return TEST_SUCCESS;
+}
+
+test_return_t regression_bug_1251482(memcached_st*)
+{
+  test::Memc memc("--server=localhost:5");
+
+  memcached_behavior_set(&memc, MEMCACHED_BEHAVIOR_RETRY_TIMEOUT, 0);
+
+  for (size_t x= 4; x; --x)
+  {
+    size_t value_length;
+    memcached_return_t rc;
+    char *value= memcached_get(&memc,
+                               test_literal_param(__func__),
+                               &value_length, NULL, &rc);
+
+    test_false(value);
+    test_compare(0LLU, value_length);
+    test_compare(MEMCACHED_CONNECTION_FAILURE, rc);
+  }
 
   return TEST_SUCCESS;
 }
