@@ -2473,7 +2473,7 @@ static bool ms_need_yield(ms_conn_t *c)
   {
     gettimeofday(&curr_time, NULL);
     time_diff= ms_time_diff(&ms_thread->startup_time, &curr_time);
-    tps= (int64_t)(((task->get_opt + task->set_opt) / (uint64_t)time_diff) * 1000000);
+    tps= (uint64_t)(task->get_opt + task->set_opt) * 1000000 / (uint64_t)time_diff;
 
     /* current throughput is greater than expected throughput */
     if (tps > ms_thread->thread_ctx->tps_perconn)
@@ -2499,6 +2499,7 @@ static void ms_update_start_time(ms_conn_t *c)
       || ((c->currcmd.cmd == CMD_SET) && (item->exp_time > 0)))
   {
     gettimeofday(&c->start_time, NULL);
+    memset(&c->throttle_time, 0, sizeof(c->start_time));
     if ((c->currcmd.cmd == CMD_SET) && (item->exp_time > 0))
     {
       /* record the current time */
@@ -2506,6 +2507,22 @@ static void ms_update_start_time(ms_conn_t *c)
     }
   }
 } /* ms_update_start_time */
+
+
+/**
+ * used to update the throttle time of each operation
+ *
+ * @param c, pointer of the concurrency
+ */
+static void ms_update_throttle_time(ms_conn_t *c)
+{
+  if ((ms_setting.stat_freq > 0)
+      && (c->throttle_time.tv_usec == 0)
+      && (c->throttle_time.tv_sec ==0))
+  {
+    gettimeofday(&c->throttle_time, NULL);
+  }
+} /* ms_update_throttle_time */
 
 
 /**
@@ -2567,6 +2584,7 @@ static void ms_drive_machine(ms_conn_t *c)
     case conn_write:
       if (! c->ctnwrite && ms_need_yield(c))
       {
+        ms_update_throttle_time(c);
         usleep(10);
 
         if (! ms_update_event(c, EV_WRITE | EV_PERSIST))
