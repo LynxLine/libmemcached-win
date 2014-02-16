@@ -26,6 +26,10 @@ EXTRA_DIST=
 dist_man_MANS=
 MAINTAINERCLEANFILES=
 
+if IS_VCS_CHECKOUT
+SUBDIRS= docs
+endif
+
 #includes additional rules from aminclude.am
 @INC_AMINCLUDE@
 
@@ -52,14 +56,14 @@ include libmemcached-1.2/include.am
 include libmemcachedutil-1.2/include.am
 
 include clients/include.am
-include docs/include.am
+
 include man/include.am
 include libhashkit/include.am
 include libmemcached/include.am
 include libmemcachedutil/include.am
 include libmemcachedinternal/include.am
 include libmemcachedinternal/util/include.am
-include rpm/include.am
+include rpm/include.mk
 include support/include.am
 include tests/include.am
 include util/include.am
@@ -81,7 +85,6 @@ merge-clean:
 	@find ./ | $(GREP) \.moved | xargs rm -r -f
 	@find ./ | $(GREP) \\.orig | xargs rm -f
 	@find ./ | $(GREP) \.rej | xargs rm -f
-	@rm -f *\.rpm
 	@find ./ | $(GREP) \.THIS | xargs rm -f
 	@find ./ | $(GREP) \.OTHER | xargs rm -f
 	@find ./ | $(GREP) \.BASE | xargs rm -f
@@ -89,7 +92,7 @@ merge-clean:
 	@echo "Files that need to be either removed or checked in:"
 	@bzr unknowns
 
-clean-local: clean-libtest-check clean-docs-check
+clean-local: clean-libtest-check clean-rpm
 
 
 lcov: lcov-clean check
@@ -111,12 +114,7 @@ DISTCLEANFILES+= config/top.h
 
 maintainer-clean-local:
 	find . -type f -name '*~' -exec rm -f '{}' \;
-	-rm -f @PACKAGE@-*.rpm
-	-rm -f @PACKAGE@-*.tar.gz
-	-rm -f man/*.1
-	-rm -f man/*.3
-	-rm -f man/*.8
-	-rm -rf man/.doctrees/
+	-$(RM) $(dist_man_MANS)
 	-rm -f Makefile.in
 	-rm -f aclocal.m4
 	-rm -f build-aux/compile
@@ -126,6 +124,7 @@ maintainer-clean-local:
 	-rm -f build-aux/install-sh
 	-rm -f build-aux/ltmain.sh
 	-rm -f build-aux/missing
+	-rm -f build-aux/test-driver
 	-rm -f build-aux/ylwrap
 	-rm -f mem_config.in
 	-rm -f config.log
@@ -139,4 +138,4 @@ maintainer-clean-local:
 	-rm -f m4/test-driver
 	-rmdir build-aux
 	-rm -rf ${top_builddir}/html
-	-rm -f bootstrap
+	-rm -f $(DIST_ARCHIVES)
