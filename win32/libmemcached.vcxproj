@@ -1,0 +1,332 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{F4C419E9-C573-348A-9814-239CF2074BE8}</ProjectGuid>
+    <RootNamespace>libmemcached</RootNamespace>
+    <Keyword>Qt4VSv1.0</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <PlatformToolSet>v140</PlatformToolSet>
+    <OutputDirectory>release\</OutputDirectory>
+    <ATLMinimizesCRunTimeLibraryUsage>false</ATLMinimizesCRunTimeLibraryUsage>
+    <CharacterSet>NotSet</CharacterSet>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <IntermediateDirectory>release\</IntermediateDirectory>
+    <PrimaryOutput>libmemcached</PrimaryOutput>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <PlatformToolSet>v140</PlatformToolSet>
+    <OutputDirectory>debug\</OutputDirectory>
+    <ATLMinimizesCRunTimeLibraryUsage>false</ATLMinimizesCRunTimeLibraryUsage>
+    <CharacterSet>NotSet</CharacterSet>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <IntermediateDirectory>debug\</IntermediateDirectory>
+    <PrimaryOutput>libmemcached</PrimaryOutput>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">libmemcached</TargetName>
+    <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</IgnoreImportLibrary>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">libmemcached</TargetName>
+    <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</IgnoreImportLibrary>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>.;..\..\libmemcached-win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-Zc:strictStrings -Zc:throwingNew %(AdditionalOptions)</AdditionalOptions>
+      <AssemblerListingLocation>release\</AssemblerListingLocation>
+      <BrowseInformation>false</BrowseInformation>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ObjectFileName>release\</ObjectFileName>
+      <Optimization>MaxSpeed</Optimization>
+      <PreprocessorDefinitions>_WINDOWS;WIN32;BUILDING_LIBMEMCACHED;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessToFile>false</PreprocessToFile>
+      <ProgramDataBaseFileName>
+      </ProgramDataBaseFileName>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DataExecutionPrevention>true</DataExecutionPrevention>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreImportLibrary>true</IgnoreImportLibrary>
+      <LinkDLL>true</LinkDLL>
+      <LinkIncremental>false</LinkIncremental>
+      <OutputFile>$(OutDir)\libmemcached.dll</OutputFile>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <SubSystem>Windows</SubSystem>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Link>
+    <Midl>
+      <DefaultCharType>Unsigned</DefaultCharType>
+      <EnableErrorChecks>None</EnableErrorChecks>
+      <WarningLevel>0</WarningLevel>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_WINDOWS;WIN32;BUILDING_LIBMEMCACHED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>.;.;..\..\libmemcached-win;..\..\..\Qt\Qt5.7.0_x86\5.7\msvc2015\mkspecs\win32-msvc2015;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>-Zc:strictStrings -Zc:throwingNew %(AdditionalOptions)</AdditionalOptions>
+      <AssemblerListingLocation>debug\</AssemblerListingLocation>
+      <BrowseInformation>false</BrowseInformation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ObjectFileName>debug\</ObjectFileName>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_WINDOWS;WIN32;BUILDING_LIBMEMCACHED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessToFile>false</PreprocessToFile>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DataExecutionPrevention>true</DataExecutionPrevention>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreImportLibrary>true</IgnoreImportLibrary>
+      <LinkDLL>true</LinkDLL>
+      <OutputFile>$(OutDir)\libmemcached.dll</OutputFile>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <SubSystem>Windows</SubSystem>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Link>
+    <Midl>
+      <DefaultCharType>Unsigned</DefaultCharType>
+      <EnableErrorChecks>None</EnableErrorChecks>
+      <WarningLevel>0</WarningLevel>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_WINDOWS;WIN32;BUILDING_LIBMEMCACHED;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\libhashkit\aes.cc" />
+    <ClCompile Include="..\libhashkit\algorithm.cc" />
+    <ClCompile Include="..\libmemcached\allocators.cc" />
+    <ClCompile Include="..\libmemcached\analyze.cc" />
+    <ClCompile Include="..\libmemcached\array.c" />
+    <ClCompile Include="..\libmemcached\auto.cc" />
+    <ClCompile Include="..\libmemcached\backtrace.cc" />
+    <ClCompile Include="..\libhashkit\behavior.cc" />
+    <ClCompile Include="libmemcached\behavior_fix.cc" />
+    <ClCompile Include="..\libmemcached\byteorder.cc" />
+    <ClCompile Include="..\libmemcached\callback.cc" />
+    <ClCompile Include="..\libmemcached\connect.cc" />
+    <ClCompile Include="..\libmemcached\csl\context.cc" />
+    <ClCompile Include="..\libhashkit\crc32.cc" />
+    <ClCompile Include="..\libmemcached\delete.cc" />
+    <ClCompile Include="..\libhashkit\digest.cc" />
+    <ClCompile Include="..\libmemcached\do.cc" />
+    <ClCompile Include="..\libmemcached\dump.cc" />
+    <ClCompile Include="..\libmemcached\encoding_key.cc" />
+    <ClCompile Include="..\libhashkit\encrypt.cc" />
+    <ClCompile Include="..\libmemcached\error.cc" />
+    <ClCompile Include="..\libmemcached\exist.cc" />
+    <ClCompile Include="..\libmemcached\fetch.cc" />
+    <ClCompile Include="..\libmemcached\flag.cc" />
+    <ClCompile Include="..\libmemcached\flush.cc" />
+    <ClCompile Include="..\libmemcached\flush_buffers.cc" />
+    <ClCompile Include="..\libhashkit\fnv_32.cc" />
+    <ClCompile Include="..\libhashkit\fnv_64.cc" />
+    <ClCompile Include="..\libhashkit\function.cc" />
+    <ClCompile Include="..\libmemcached\get.cc" />
+    <ClCompile Include="..\libhashkit\has.cc" />
+    <ClCompile Include="..\libmemcached\hash.cc" />
+    <ClCompile Include="..\libhashkit\hashkit.cc" />
+    <ClCompile Include="..\libmemcached\hosts.cc" />
+    <ClCompile Include="..\libhashkit\hsieh.cc" />
+    <ClCompile Include="..\libmemcached\initialize_query.cc" />
+    <ClCompile Include="..\libmemcached\instance.cc" />
+    <ClCompile Include="..\libmemcached\io.cc" />
+    <ClCompile Include="..\libhashkit\jenkins.cc" />
+    <ClCompile Include="..\libhashkit\ketama.cc" />
+    <ClCompile Include="..\libmemcached\key.cc" />
+    <ClCompile Include="..\libhashkit\md5.cc" />
+    <ClCompile Include="..\libmemcached\memcached.cc" />
+    <ClCompile Include="..\libhashkit\murmur.cc" />
+    <ClCompile Include="..\libhashkit\murmur3.cc" />
+    <ClCompile Include="..\libhashkit\murmur3_api.cc" />
+    <ClCompile Include="..\libmemcached\namespace.cc" />
+    <ClCompile Include="..\libhashkit\one_at_a_time.cc" />
+    <ClCompile Include="..\libmemcached\options.cc" />
+    <ClCompile Include="..\libmemcached\parse.cc" />
+    <ClCompile Include="libmemcached\csl\parser.cc" />
+    <ClCompile Include="..\libmemcached\poll.cc" />
+    <ClCompile Include="..\libmemcached\purge.cc" />
+    <ClCompile Include="..\libmemcached\quit.cc" />
+    <ClCompile Include="..\libmemcached\response.cc" />
+    <ClCompile Include="..\libmemcached\result.cc" />
+    <ClCompile Include="..\libhashkit\rijndael.cc" />
+    <ClCompile Include="..\libmemcached\sasl.cc" />
+    <ClCompile Include="libmemcached\csl\scanner.cc" />
+    <ClCompile Include="..\libmemcached\server.cc" />
+    <ClCompile Include="..\libmemcached\server_list.cc" />
+    <ClCompile Include="..\libmemcached\stats.cc" />
+    <ClCompile Include="..\libmemcached\storage.cc" />
+    <ClCompile Include="..\libhashkit\str_algorithm.cc" />
+    <ClCompile Include="..\libhashkit\strerror.cc" />
+    <ClCompile Include="libmemcached\strerror_fix.cc" />
+    <ClCompile Include="..\libhashkit\string.cc" />
+    <ClCompile Include="libmemcached\string_fix.cc" />
+    <ClCompile Include="..\libmemcached\touch.cc" />
+    <ClCompile Include="..\libmemcached\udp.cc" />
+    <ClCompile Include="..\libmemcached\verbosity.cc" />
+    <ClCompile Include="..\libmemcached\version.cc" />
+    <ClCompile Include="..\libmemcached\virtual_bucket.c" />
+    <ClCompile Include="libmemcached\windows.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\libhashkit\aes.h" />
+    <ClInclude Include="..\libhashkit-1.0\algorithm.h" />
+    <ClInclude Include="..\libhashkit\algorithm.h" />
+    <ClInclude Include="..\libmemcached-1.0\alloc.h" />
+    <ClInclude Include="..\libmemcached-1.0\allocators.h" />
+    <ClInclude Include="..\libmemcached\allocators.hpp" />
+    <ClInclude Include="..\libmemcached-1.0\analyze.h" />
+    <ClInclude Include="..\libmemcached\array.h" />
+    <ClInclude Include="..\libmemcached\assert.hpp" />
+    <ClInclude Include="..\libmemcached-1.0\auto.h" />
+    <ClInclude Include="..\libmemcached\backtrace.hpp" />
+    <ClInclude Include="..\libhashkit-1.0\basic_string.h" />
+    <ClInclude Include="..\libmemcached-1.0\basic_string.h" />
+    <ClInclude Include="..\libhashkit-1.0\behavior.h" />
+    <ClInclude Include="..\libmemcached-1.0\behavior.h" />
+    <ClInclude Include="..\libmemcached\behavior.hpp" />
+    <ClInclude Include="..\libmemcached\byteorder.h" />
+    <ClInclude Include="..\libmemcached-1.0\callback.h" />
+    <ClInclude Include="..\libmemcached\callback.h" />
+    <ClInclude Include="..\libmemcached-1.0\callbacks.h" />
+    <ClInclude Include="..\libhashkit\common.h" />
+    <ClInclude Include="..\libmemcached\common.h" />
+    <ClInclude Include="..\libmemcached\csl\common.h" />
+    <ClInclude Include="libmemcached-1.0\configure.h" />
+    <ClInclude Include="..\libmemcached\connect.hpp" />
+    <ClInclude Include="..\libmemcached\csl\context.h" />
+    <ClInclude Include="..\libmemcached\continuum.hpp" />
+    <ClInclude Include="..\libmemcached-1.0\defaults.h" />
+    <ClInclude Include="..\libmemcached-1.0\delete.h" />
+    <ClInclude Include="..\libmemcached-1.0\deprecated_types.h" />
+    <ClInclude Include="..\libhashkit-1.0\digest.h" />
+    <ClInclude Include="..\libmemcached\do.hpp" />
+    <ClInclude Include="..\libmemcached-1.0\dump.h" />
+    <ClInclude Include="..\libmemcached-1.0\encoding_key.h" />
+    <ClInclude Include="..\libmemcached\encoding_key.h" />
+    <ClInclude Include="..\libmemcached-1.0\error.h" />
+    <ClInclude Include="..\libmemcached\error.hpp" />
+    <ClInclude Include="..\libmemcached-1.0\exception.hpp" />
+    <ClInclude Include="..\libmemcached-1.0\exist.h" />
+    <ClInclude Include="..\libmemcached-1.0\fetch.h" />
+    <ClInclude Include="..\libmemcached\flag.hpp" />
+    <ClInclude Include="..\libmemcached-1.0\flush.h" />
+    <ClInclude Include="..\libmemcached-1.0\flush_buffers.h" />
+    <ClInclude Include="..\libhashkit-1.0\function.h" />
+    <ClInclude Include="..\libmemcached-1.0\get.h" />
+    <ClInclude Include="..\libhashkit-1.0\has.h" />
+    <ClInclude Include="..\libmemcached-1.0\hash.h" />
+    <ClInclude Include="..\libmemcached\hash.hpp" />
+    <ClInclude Include="..\libhashkit-1.0\hashkit.h" />
+    <ClInclude Include="..\libhashkit\hashkit.h" />
+    <ClInclude Include="..\libhashkit-1.0\hashkit.hpp" />
+    <ClInclude Include="..\libmemcached\initialize_query.h" />
+    <ClInclude Include="..\libmemcached\instance.hpp" />
+    <ClInclude Include="..\libmemcached\internal.h" />
+    <ClInclude Include="..\libmemcached\io.h" />
+    <ClInclude Include="..\libmemcached\io.hpp" />
+    <ClInclude Include="..\libhashkit\is.h" />
+    <ClInclude Include="..\libmemcached\is.h" />
+    <ClInclude Include="..\libmemcached\key.hpp" />
+    <ClInclude Include="..\libmemcached\libmemcached_probes.h" />
+    <ClInclude Include="..\libmemcached-1.0\limits.h" />
+    <ClInclude Include="mem_config.h" />
+    <ClInclude Include="..\libmemcached-1.0\memcached.h" />
+    <ClInclude Include="..\libmemcached\memcached.h" />
+    <ClInclude Include="..\libmemcached-1.0\memcached.hpp" />
+    <ClInclude Include="..\libmemcached\memcached.hpp" />
+    <ClInclude Include="..\libmemcached\memory.h" />
+    <ClInclude Include="..\libhashkit\murmur3.h" />
+    <ClInclude Include="..\libmemcached\namespace.h" />
+    <ClInclude Include="..\libmemcached-1.0\options.h" />
+    <ClInclude Include="..\libmemcached\options.hpp" />
+    <ClInclude Include="..\libmemcached-1.0\parse.h" />
+    <ClInclude Include="libmemcached\csl\parser.h" />
+    <ClInclude Include="..\libmemcached-1.0\platform.h" />
+    <ClInclude Include="..\libmemcached\poll.h" />
+    <ClInclude Include="..\libmemcached-1.0\quit.h" />
+    <ClInclude Include="..\libmemcached\quit.hpp" />
+    <ClInclude Include="..\libmemcached\response.h" />
+    <ClInclude Include="..\libmemcached-1.0\result.h" />
+    <ClInclude Include="..\libmemcached\result.h" />
+    <ClInclude Include="..\libmemcached-1.0\return.h" />
+    <ClInclude Include="..\libhashkit\rijndael.hpp" />
+    <ClInclude Include="..\libmemcached-1.0\sasl.h" />
+    <ClInclude Include="..\libmemcached\sasl.hpp" />
+    <ClInclude Include="libmemcached\csl\scanner.h" />
+    <ClInclude Include="..\libmemcached-1.0\server.h" />
+    <ClInclude Include="..\libmemcached\csl\server.h" />
+    <ClInclude Include="..\libmemcached\server.hpp" />
+    <ClInclude Include="..\libmemcached\server_instance.h" />
+    <ClInclude Include="..\libmemcached-1.0\server_list.h" />
+    <ClInclude Include="..\libmemcached\server_list.hpp" />
+    <ClInclude Include="..\libmemcached\socket.hpp" />
+    <ClInclude Include="..\libmemcached-1.0\stats.h" />
+    <ClInclude Include="..\libmemcached-1.0\storage.h" />
+    <ClInclude Include="..\libhashkit-1.0\str_algorithm.h" />
+    <ClInclude Include="..\libhashkit-1.0\strerror.h" />
+    <ClInclude Include="..\libmemcached-1.0\strerror.h" />
+    <ClInclude Include="..\libhashkit-1.0\string.h" />
+    <ClInclude Include="..\libhashkit\string.h" />
+    <ClInclude Include="..\libmemcached\string.hpp" />
+    <ClInclude Include="..\libmemcached\csl\symbol.h" />
+    <ClInclude Include="..\libmemcached-1.0\touch.h" />
+    <ClInclude Include="..\libmemcached-1.0\triggers.h" />
+    <ClInclude Include="..\libhashkit-1.0\types.h" />
+    <ClInclude Include="..\libmemcached-1.0\types.h" />
+    <ClInclude Include="..\libmemcached\udp.hpp" />
+    <ClInclude Include="..\libmemcached\util.h" />
+    <ClInclude Include="..\libmemcached-1.0\verbosity.h" />
+    <ClInclude Include="..\libmemcached-1.0\version.h" />
+    <ClInclude Include="..\libmemcached\version.hpp" />
+    <ClInclude Include="..\libmemcached\virtual_bucket.h" />
+    <ClInclude Include="..\libhashkit-1.0\visibility.h" />
+    <ClInclude Include="..\libmemcached-1.0\visibility.h" />
+    <ClInclude Include="..\libmemcached\watchpoint.h" />
+    <ClInclude Include="..\libmemcached\windows.hpp" />
+    <ClInclude Include="wrappers.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
