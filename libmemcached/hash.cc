@@ -38,7 +38,9 @@
 
 #include <libmemcached/common.h>
 
-#include <sys/time.h>
+#ifdef HAVE_SYS_TIME_H
+# include <sys/time.h>
+#endif
 
 #include <libmemcached/virtual_bucket.h>
 

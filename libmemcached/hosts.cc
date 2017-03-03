@@ -39,7 +39,9 @@
 #include "libmemcached/assert.hpp"
 
 #include <cmath>
-#include <sys/time.h>
+#ifdef HAVE_SYS_TIME_H
+# include <sys/time.h>
+#endif
 
 /* Protoypes (static) */
 static memcached_return_t update_continuum(Memcached *ptr);

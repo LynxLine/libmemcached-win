@@ -761,7 +761,7 @@ static memcached_return_t _memcached_connect(memcached_instance_st* server, cons
   case MEMCACHED_CONNECTION_TCP:
     rc= network_connect(server);
 
-#if defined(LIBMEMCACHED_WITH_SASL_SUPPORT)
+#if defined(LIBMEMCACHED_WITH_SASL_SUPPORT) && LIBMEMCACHED_WITH_SASL_SUPPORT
     if (LIBMEMCACHED_WITH_SASL_SUPPORT)
     {
       if (server->fd != INVALID_SOCKET and server->root->sasl.callbacks)

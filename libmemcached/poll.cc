@@ -15,8 +15,12 @@
 #if defined(_WIN32)
 #include "libmemcached/poll.h"
 
-#include <sys/time.h>
+#ifdef HAVE_SYS_TIME_H
+# include <sys/time.h>
+#endif
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
+#endif
 
 int poll(struct pollfd fds[], nfds_t nfds, int tmo)
 {
@@ -48,8 +52,13 @@ int poll(struct pollfd fds[], nfds_t nfds, int tmo)
     }
   }
 
+#if defined(_MSC_VER)
+  struct timeval timeout= { tmo / 1000,
+							(tmo % 1000) * 1000 };
+#else
   struct timeval timeout= { .tv_sec = tmo / 1000,
-                            .tv_usec= (tmo % 1000) * 1000 };
+							.tv_usec= (tmo % 1000) * 1000 };
+#endif
   struct timeval *tp= &timeout;
   if (tmo == -1)
   {
