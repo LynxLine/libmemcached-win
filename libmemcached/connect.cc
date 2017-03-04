@@ -576,6 +576,10 @@ static memcached_return_t network_connect(memcached_instance_st* server)
 
     /* An error occurred */
     int local_error= get_socket_errno();
+#if defined(_WIN32)
+    if (local_error==WSAEWOULDBLOCK)
+      local_error= EINPROGRESS;
+#endif
     switch (local_error)
     {
     case ETIMEDOUT:
