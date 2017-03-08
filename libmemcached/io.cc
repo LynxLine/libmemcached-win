@@ -344,13 +344,19 @@ static bool io_flush(memcached_instance_st* instance,
     ssize_t sent_length= ::send(instance->fd, local_write_ptr, write_length, flags);
     int local_errno= get_socket_errno(); // We cache in case memcached_quit_server() modifies errno
 
+#ifdef _WIN32
+    if ((local_errno == WSAENOTCONN)||(local_errno == WSAEWOULDBLOCK)) {
+      local_errno = EAGAIN;
+    }
+#endif
+
     if (sent_length == SOCKET_ERROR)
     {
 #if 0 // @todo I should look at why we hit this bit of code hard frequently
       WATCHPOINT_ERRNO(get_socket_errno());
       WATCHPOINT_NUMBER(get_socket_errno());
 #endif
-      switch (get_socket_errno())
+      switch (local_errno)
       {
       case ENOBUFS:
         continue;
@@ -425,9 +431,15 @@ static memcached_return_t _io_fill(memcached_instance_st* instance)
     data_read= ::recv(instance->fd, instance->read_buffer, MEMCACHED_MAX_BUFFER, MSG_NOSIGNAL);
     int local_errno= get_socket_errno(); // We cache in case memcached_quit_server() modifies errno
 
+#ifdef _WIN32
+    if (local_errno == WSAEWOULDBLOCK) {
+      local_errno = EAGAIN;
+    }
+#endif
+
     if (data_read == SOCKET_ERROR)
     {
-      switch (get_socket_errno())
+      switch (local_errno)
       {
       case EINTR: // We just retry
         continue;
